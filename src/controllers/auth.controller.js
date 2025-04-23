@@ -38,7 +38,11 @@ const updateUser = catchAsync(async (req, res) => {
 const changePassword = catchAsync(async (req, res) => {
   const { userId } = req.params; // assuming userId is passed in the URL params
   const { oldPassword, newPassword } = req.body;
-  const updatedUser = await userService.changePassword(userId, oldPassword, newPassword);
+  const updatedUser = await userService.changePassword(
+    userId,
+    oldPassword,
+    newPassword,
+  );
   res.status(httpStatus.OK).send({ user: updatedUser });
 });
 
