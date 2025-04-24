@@ -24,7 +24,7 @@ const areaSchema = mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 areaSchema.plugin(toJson);

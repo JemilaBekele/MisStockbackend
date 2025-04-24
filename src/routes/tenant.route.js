@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const validate = require('../middlewares/validate');
 const { tenantValidaation } = require('../validations');
@@ -8,43 +9,39 @@ const auth = require('../middlewares/auth');
 
 // Authentication routes
 router.post(
-  '/api/register',
+  '/api/tentant/register',
   validate(tenantValidaation.createTenantSchema),
-  tenantController.createTenant
+  tenantController.createTenant,
 );
 
 router.post(
-  '/api/login',
+  '/api/tentant/login',
   authLimiter,
   validate(tenantValidaation.loginSchema),
-  tenantController.login
+  tenantController.login,
 );
 
 router.post(
-  '/api/refresh-token',
+  '/api/tentant/refresh-token',
   validate(tenantValidaation.refreshTokenSchema),
-  tenantController.refreshToken
+  tenantController.refreshToken,
 );
 
 // Tenant management routes
 router.put(
   '/api/tenant/:tenantId',
   auth,
-  validate(tenantValidaation.updateTenantSchema), 
-  tenantController.updateTenant
+  validate(tenantValidaation.updateTenantSchema),
+  tenantController.updateTenant,
 );
 
 router.put(
   '/api/tenant/:tenantId/change-password',
   auth,
   validate(tenantValidaation.changePasswordSchema),
-  tenantController.changePassword
+  tenantController.changePassword,
 );
 
-router.delete(
-  '/api/tenant/:tenantId',
-  auth,
-  tenantController.deleteTenant
-);
+router.delete('/api/tenant/:tenantId', auth, tenantController.deleteTenant);
 
 module.exports = router;

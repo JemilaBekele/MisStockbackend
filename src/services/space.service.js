@@ -10,14 +10,25 @@ const createSpace = async (spaceBody) => {
 
 // Get a space by ID
 const getSpaceById = async (id) => {
-  const space = await Space.findById(id).populate('areaId').populate('linkedToUnitId');
+  const space = await Space.findById(id)
+    .populate('areaId')
+    .populate('linkedToUnitId')
+    .populate('features');
   return space;
 };
 
 // Get all spaces
 const getAllSpaces = async () => {
-  const spaces = await Space.find().sort({ createdAt: -1 }).populate('areaId').populate('linkedToUnitId');
-  return spaces;
+  const spaces = await Space.find()
+    .sort({ createdAt: -1 })
+    .populate('areaId')
+    .populate('linkedToUnitId')
+    .populate('features');
+
+  return {
+    spaces,
+    count: spaces.length,
+  };
 };
 
 // Get spaces by area

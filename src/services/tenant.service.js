@@ -1,6 +1,8 @@
+/* eslint-disable no-unused-expressions */
 const httpStatus = require('http-status');
 const { RateLimiterMongo } = require('rate-limiter-flexible');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const tenantService = require('./tenant.service');
 const tokenService = require('./token.service');
 const ApiError = require('../utils/ApiError');
@@ -8,7 +10,6 @@ const { tokenTypes } = require('../config/tokens');
 const config = require('../config/config');
 const { Tenant } = require('../models');
 const EventEmitter = require('../utils/EventEmitter');
-const bcrypt = require('bcryptjs');
 
 const login = async (email, password, ipAddr) => {
   const rateLimiterOptions = {
@@ -42,7 +43,7 @@ const login = async (email, password, ipAddr) => {
     tenant &&
       promises.push(
         emailIpBruteLimiter.consume(`${email}_${ipAddr}`),
-        emailBruteLimiter.consume(email)
+        emailBruteLimiter.consume(email),
       );
     await Promise.all(promises);
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
@@ -55,7 +56,7 @@ const refreshAuthToken = async (refreshToken) => {
   try {
     const refreshTokenDoc = await tokenService.verifyToken(
       refreshToken,
-      tokenTypes.REFRESH
+      tokenTypes.REFRESH,
     );
     const tenant = await tenantService.getTenantById(refreshTokenDoc.user);
     if (!tenant) {
@@ -67,8 +68,6 @@ const refreshAuthToken = async (refreshToken) => {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
   }
 };
-
-
 
 const createTenant = async (tenantBody) => {
   if (await Tenant.isEmailTaken(tenantBody.email)) {
@@ -126,13 +125,6 @@ const deleteTenant = async (id) => {
   await tenant.remove();
   return { message: 'Tenant deleted successfully' };
 };
-
-
-
-
-
-
-
 
 module.exports = {
   login,

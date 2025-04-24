@@ -15,17 +15,17 @@ const userSchema = mongoose.Schema(
       enum: ['Resident', 'ShopOwner', 'Maintenance', 'Accountant', 'Admin'],
       default: 'Resident',
     },
-    
+
     phone: {
       type: String,
       trim: true,
     },
-    
+
     status: {
       type: String,
       enum: ['Active', 'Inactive', 'Suspended'],
       default: 'Active',
-    },    
+    },
     email: {
       type: String,
       required: true,

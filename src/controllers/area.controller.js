@@ -29,13 +29,15 @@ const getAllAreas = catchAsync(async (req, res) => {
 // Update Area
 const updateArea = catchAsync(async (req, res) => {
   const area = await areaService.updateArea(req.params.id, req.body);
-  res.status(httpStatus.OK).send({ success: true, message: 'Area updated successfully', area });
+  res
+    .status(httpStatus.OK)
+    .send({ success: true, message: 'Area updated successfully', area });
 });
 
 // Delete Area
 const deleteArea = catchAsync(async (req, res) => {
-  const response =  await areaService.deleteArea(req.params.id);
- res.status(httpStatus.OK).send(response);
+  const response = await areaService.deleteArea(req.params.id);
+  res.status(httpStatus.OK).send(response);
 });
 
 module.exports = {

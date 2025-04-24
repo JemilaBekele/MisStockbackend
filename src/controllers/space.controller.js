@@ -35,13 +35,15 @@ const getSpacesByArea = catchAsync(async (req, res) => {
 // Update a space
 const updateSpace = catchAsync(async (req, res) => {
   const space = await spaceService.updateSpace(req.params.id, req.body);
-  res.status(httpStatus.OK).send({ success: true, message: 'Space updated successfully', space });
+  res
+    .status(httpStatus.OK)
+    .send({ success: true, message: 'Space updated successfully', space });
 });
 
 // Delete a space
 const deleteSpace = catchAsync(async (req, res) => {
   const response = await spaceService.deleteSpace(req.params.id);
- res.status(httpStatus.OK).send(response);
+  res.status(httpStatus.OK).send(response);
 });
 
 module.exports = {

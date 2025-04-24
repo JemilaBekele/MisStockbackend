@@ -24,6 +24,14 @@ const getUserById = async (id) => {
   const user = await User.findById(id);
   return user;
 };
+// Get all users
+const getAllUsers = async () => {
+  const users = await User.find();
+  return {
+    users,
+    count: users.length,
+  };
+};
 
 // Update user details (except password)
 const updateUser = async (id, updateBody) => {
@@ -80,5 +88,6 @@ module.exports = {
   getUserById,
   updateUser,
   changePassword,
+  getAllUsers,
   deleteUser,
 };

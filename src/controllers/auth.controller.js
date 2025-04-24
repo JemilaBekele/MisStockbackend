@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { userService, tokenService, authService } = require('../services');
+const ApiError = require('../utils/ApiError');
 
 const register = catchAsync(async (req, res) => {
   // create a user
@@ -46,13 +47,24 @@ const changePassword = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ user: updatedUser });
 });
 
+const getAllUsers = catchAsync(async (req, res) => {
+  const result = await userService.getAllUsers();
+  res.status(httpStatus.OK).send(result); // returns { users, count }
+});
 // Delete user
 const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params; // assuming userId is passed in the URL params
   const response = await userService.deleteUser(userId);
   res.status(httpStatus.OK).send(response); // response could be { message: 'User deleted successfully' }
 });
-
+const getUserById = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const user = await userService.getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  res.status(httpStatus.OK).send({ user });
+});
 module.exports = {
   register,
   login,
@@ -60,4 +72,6 @@ module.exports = {
   updateUser,
   changePassword,
   deleteUser,
+  getAllUsers,
+  getUserById,
 };

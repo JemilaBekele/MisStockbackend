@@ -17,7 +17,10 @@ const getFeatureById = async (id) => {
 // Get all Features
 const getAllFeatures = async () => {
   const features = await Feature.find().sort({ floorLevel: 1 });
-  return features;
+  return {
+    features,
+    count: features.length,
+  };
 };
 
 // Update Feature

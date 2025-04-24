@@ -7,11 +7,11 @@ const featureSchema = mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-    }
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 featureSchema.plugin(toJson);

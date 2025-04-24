@@ -17,7 +17,10 @@ const getAreaById = async (id) => {
 // Get all Areas
 const getAllAreas = async () => {
   const areas = await Area.find().sort({ floorLevel: 1 });
-  return areas;
+  return {
+    areas,
+    count: areas.length,
+  };
 };
 
 // Update Area

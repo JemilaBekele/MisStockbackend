@@ -10,9 +10,7 @@ const createUnit = async (unitBody) => {
 
 // Get unit by ID
 const getUnitById = async (id) => {
-  const unit = await Unit.findById(id)
-    .populate('areaId')
-    .populate('roomIds');
+  const unit = await Unit.findById(id).populate('areaId').populate('roomIds');
   return unit;
 };
 
@@ -22,7 +20,10 @@ const getAllUnits = async () => {
     .sort({ createdAt: -1 })
     .populate('areaId')
     .populate('roomIds');
-  return units;
+  return {
+    units,
+    count: units.length,
+  };
 };
 
 // Get units by area

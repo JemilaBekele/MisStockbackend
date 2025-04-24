@@ -23,9 +23,7 @@ const updateUserSchema = {
     name: Joi.string().optional(),
     email: Joi.string().email().optional(),
     phone: Joi.string().optional(),
-    status: Joi.string()
-      .valid('Active', 'Inactive', 'Suspended')
-      .optional(),
+    status: Joi.string().valid('Active', 'Inactive', 'Suspended').optional(),
     role: Joi.string()
       .valid('Resident', 'ShopOwner', 'Maintenance', 'Accountant', 'Admin')
       .optional(),

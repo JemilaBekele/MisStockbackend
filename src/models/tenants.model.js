@@ -10,23 +10,20 @@ const tenantSchema = mongoose.Schema(
       required: true,
       trim: true,
     },
+    role: {
+      type: String,
+      enum: ['Owner', 'Renter', 'None'],
+      default: 'Resident',
+    },
     phone: {
       type: String,
       trim: true,
     },
-    adress: {
-        type: String,
-        trim: true,
-      },
-    note: {
-        type: String,
-        trim: true,
-      },
     status: {
       type: String,
       enum: ['Active', 'Inactive', 'Suspended'],
       default: 'Active',
-    },    
+    },
     email: {
       type: String,
       required: true,
