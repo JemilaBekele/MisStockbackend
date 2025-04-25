@@ -29,13 +29,15 @@ const getAllFearures = catchAsync(async (req, res) => {
 // Update Fearure
 const updateFearure = catchAsync(async (req, res) => {
   const fearure = await fearureService.updateFeature(req.params.id, req.body);
-  res.status(httpStatus.OK).send({ success: true, message: 'Fearure updated successfully', fearure });
+  res
+    .status(httpStatus.OK)
+    .send({ success: true, message: 'Fearure updated successfully', fearure });
 });
 
 // Delete Fearure
 const deleteFearure = catchAsync(async (req, res) => {
-  const response =  await fearureService.deleteFeature(req.params.id);
- res.status(httpStatus.OK).send(response);
+  const response = await fearureService.deleteFeature(req.params.id);
+  res.status(httpStatus.OK).send(response);
 });
 
 module.exports = {

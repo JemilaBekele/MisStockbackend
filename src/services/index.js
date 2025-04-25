@@ -12,3 +12,11 @@ module.exports.areaService = require('./area.service');
 module.exports.spaceService = require('./space.service');
 module.exports.unitService = require('./unit.service');
 module.exports.fearureService = require('./fearure.service');
+
+// inventory
+module.exports.inventoryCategoryService = require('./inventoryCategory.service');
+module.exports.inventoryItemService = require('./InventoryItem.service');
+module.exports.inventoryLocationService = require('./inventoryLocation.service');
+module.exports.inventoryLogService = require('./inventoryLog.service');
+module.exports.inventoryStockService = require('./inventoryStock.service');
+module.exports.purchaseOrderService = require('./purchaseOrder.service');

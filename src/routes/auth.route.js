@@ -28,6 +28,9 @@ router.post(
 );
 
 router.get('/api/user', auth, authController.getAllUsers); // ✅ Get all users
+router.get('/api/user/confirmfalse', auth, authController.getFalseconfirm); // ✅ Get all users
+
+router.get('/api/user/roletentant', auth, authController.getUsersByRoles); // ✅ Get all users
 router.get('/api/user/:userId', auth, authController.getUserById);
 // User management routes
 router.put(

@@ -51,6 +51,11 @@ const getAllUsers = catchAsync(async (req, res) => {
   const result = await userService.getAllUsers();
   res.status(httpStatus.OK).send(result); // returns { users, count }
 });
+
+const getUsersByRoles = catchAsync(async (req, res) => {
+  const result = await userService.getUsersByRoles();
+  res.status(httpStatus.OK).send(result); // returns { users, count }
+});
 // Delete user
 const deleteUser = catchAsync(async (req, res) => {
   const { userId } = req.params; // assuming userId is passed in the URL params
@@ -65,6 +70,11 @@ const getUserById = catchAsync(async (req, res) => {
   }
   res.status(httpStatus.OK).send({ user });
 });
+
+const getFalseconfirm = catchAsync(async (req, res) => {
+  const result = await userService.getFalseconfirm();
+  res.status(httpStatus.OK).send(result); // returns { users, count }
+});
 module.exports = {
   register,
   login,
@@ -74,4 +84,6 @@ module.exports = {
   deleteUser,
   getAllUsers,
   getUserById,
+  getUsersByRoles,
+  getFalseconfirm,
 };

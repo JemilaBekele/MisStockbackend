@@ -12,15 +12,27 @@ const userSchema = mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['Resident', 'ShopOwner', 'Maintenance', 'Accountant', 'Admin'],
-      default: 'Resident',
+      enum: [
+        'Resident',
+        'ShopOwner',
+        'Maintenance',
+        'Accountant',
+        'Admin',
+        'Owner',
+        'Renter',
+        'None',
+      ],
+      default: 'None',
     },
 
     phone: {
       type: String,
       trim: true,
     },
-
+    confirm: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: ['Active', 'Inactive', 'Suspended'],

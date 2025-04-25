@@ -8,8 +8,18 @@ const createUserSchema = {
     email: Joi.string().email().required(),
     password: Joi.custom(password).required(),
     role: Joi.string()
-      .valid('Resident', 'ShopOwner', 'Maintenance', 'Accountant', 'Admin')
-      .default('Resident'),
+      .valid(
+        'Resident',
+        'ShopOwner',
+        'Maintenance',
+        'Accountant',
+        'Admin',
+        'Owner',
+        'Renter',
+        'None',
+      )
+      .default('None'),
+    confirm: Joi.boolean().default(false),
     phone: Joi.string().optional(),
     status: Joi.string()
       .valid('Active', 'Inactive', 'Suspended')

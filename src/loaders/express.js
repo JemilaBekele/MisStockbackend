@@ -14,11 +14,18 @@ const unitRouter = require('../routes/unit.route');
 const spaceRouter = require('../routes/space.route');
 const fearureRouter = require('../routes/fearure.route');
 
+const InventoryCategoryRouter = require('../routes/inventoryCategory.route');
+const InventoryItemRouter = require('../routes/inventoryItem.route');
+const InventoryLocationRouter = require('../routes/inventoryLocation.route');
+const InventoryLogRouter = require('../routes/inventoryLog.route');
+const InventoryStockRouter = require('../routes/inventoryStock.route');
+const PurchaseOrderRouter = require('../routes/purchaseOrder.route');
+
 const commentRouter = require('../routes/comment.route');
 const { errorHandler, errorConverter } = require('../middlewares/error');
 const ApiError = require('../utils/ApiError');
 const morgan = require('../config/morgan');
-const { jwtStrategy, jwtStrategytentant } = require('../config/passport');
+const { jwtStrategy } = require('../config/passport');
 const { cspOptions, env } = require('../config/config');
 
 module.exports = async (app) => {
@@ -28,8 +35,6 @@ module.exports = async (app) => {
   // jwt authentication
   app.use(passport.initialize());
   passport.use('jwt', jwtStrategy);
-
-  passport.use('jwt', jwtStrategytentant);
 
   app.use(express.json());
 
@@ -61,6 +66,14 @@ module.exports = async (app) => {
   app.use(unitRouter);
   app.use(spaceRouter);
   app.use(fearureRouter);
+
+  // inventory
+  app.use(InventoryCategoryRouter);
+  app.use(InventoryItemRouter);
+  app.use(InventoryLocationRouter);
+  app.use(InventoryLogRouter);
+  app.use(InventoryStockRouter);
+  app.use(PurchaseOrderRouter);
   // path not found 404
   app.use((req, res, next) => {
     next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));

@@ -8,42 +8,102 @@ const { tokenTypes } = require('../config/tokens');
 const config = require('../config/config');
 
 const login = async (email, password, ipAddr) => {
-  const rateLimiterOptioins = {
+  const rateLimiterOptions = {
     storeClient: mongoose.connection,
-    dbName: 'blog_app',
-    blockDuration: 60 * 60 * 24,
+    dbName: mongoose.connection.name,
+    blockDuration: 60 * 60 * 24, // Block for 1 day
   };
+
   const emailIpBruteLimiter = new RateLimiterMongo({
-    ...rateLimiterOptioins,
+    ...rateLimiterOptions,
     points: config.rateLimiter.maxAttemptsByIpUsername,
-    duration: 60 * 10,
+    duration: 60 * 10, // 10 minutes
   });
 
   const slowerBruteLimiter = new RateLimiterMongo({
-    ...rateLimiterOptioins,
+    ...rateLimiterOptions,
     points: config.rateLimiter.maxAttemptsPerDay,
     duration: 60 * 60 * 24,
   });
 
   const emailBruteLimiter = new RateLimiterMongo({
-    ...rateLimiterOptioins,
+    ...rateLimiterOptions,
     points: config.rateLimiter.maxAttemptsPerEmail,
     duration: 60 * 60 * 24,
   });
+
   const promises = [slowerBruteLimiter.consume(ipAddr)];
+
   const user = await userService.getUserByEmail(email);
   if (!user || !(await user.isPasswordMatch(password))) {
     // eslint-disable-next-line no-unused-expressions
     user &&
-      promises.push([
+      promises.push(
         emailIpBruteLimiter.consume(`${email}_${ipAddr}`),
         emailBruteLimiter.consume(email),
-      ]);
+      );
     await Promise.all(promises);
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
+  if (!user.confirm) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      'Your account is not confirmed yet',
+    );
+  }
   return user;
 };
+
+// const login = async (email, password, ipAddr) => {
+//   const rateLimiterOptioins = {
+//     storeClient: mongoose.connection,
+//     dbName: 'blog_app',
+//     blockDuration: 60 * 60 * 24,
+//   };
+
+//   const emailIpBruteLimiter = new RateLimiterMongo({
+//     ...rateLimiterOptioins,
+//     points: config.rateLimiter.maxAttemptsByIpUsername,
+//     duration: 60 * 10,
+//   });
+
+//   const slowerBruteLimiter = new RateLimiterMongo({
+//     ...rateLimiterOptioins,
+//     points: config.rateLimiter.maxAttemptsPerDay,
+//     duration: 60 * 60 * 24,
+//   });
+
+//   const emailBruteLimiter = new RateLimiterMongo({
+//     ...rateLimiterOptioins,
+//     points: config.rateLimiter.maxAttemptsPerEmail,
+//     duration: 60 * 60 * 24,
+//   });
+
+//   const promises = [slowerBruteLimiter.consume(ipAddr)];
+//   const user = await userService.getUserByEmail(email);
+
+//   if (!user || !(await user.isPasswordMatch(password))) {
+//     // Incorrect email or password
+//     // eslint-disable-next-line no-unused-expressions
+//     user &&
+//       promises.push([
+//         emailIpBruteLimiter.consume(`${email}_${ipAddr}`),
+//         emailBruteLimiter.consume(email),
+//       ]);
+//     await Promise.all(promises);
+//     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+//   }
+
+//   // Check if user is confirmed
+//   if (!user.confirm) {
+//     throw new ApiError(
+//       httpStatus.FORBIDDEN,
+//       'Your account is not confirmed yet',
+//     );
+//   }
+
+//   return user;
+// };
 
 const refreshAuthToken = async (refreshToken) => {
   try {

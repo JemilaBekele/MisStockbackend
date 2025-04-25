@@ -26,7 +26,26 @@ const getUserById = async (id) => {
 };
 // Get all users
 const getAllUsers = async () => {
-  const users = await User.find();
+  const users = await User.find({
+    role: {
+      $in: ['Resident', 'ShopOwner', 'Maintenance', 'Accountant', 'Admin'],
+    },
+  });
+  return {
+    users,
+    count: users.length,
+  };
+};
+
+const getUsersByRoles = async () => {
+  const users = await User.find({ role: { $in: ['Owner', 'Renter', 'None'] } });
+  return {
+    users,
+    count: users.length,
+  };
+};
+const getFalseconfirm = async () => {
+  const users = await User.find({ confirm: false });
   return {
     users,
     count: users.length,
@@ -90,4 +109,6 @@ module.exports = {
   changePassword,
   getAllUsers,
   deleteUser,
+  getUsersByRoles,
+  getFalseconfirm,
 };

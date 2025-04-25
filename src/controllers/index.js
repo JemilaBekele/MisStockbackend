@@ -8,3 +8,12 @@ module.exports.areaController = require('./area.controller');
 module.exports.spaceController = require('./space.controller');
 module.exports.unitController = require('./unit.controller');
 module.exports.fearureController = require('./fearure.controller');
+
+// inventory
+
+module.exports.InventoryCategoryController = require('./inventoryCategory.controller');
+module.exports.inventoryItemController = require('./InventoryItem.controller');
+module.exports.inventoryLocationController = require('./inventoryLocation.controller');
+module.exports.inventoryLogController = require('./inventoryLog.controller');
+module.exports.inventoryStockController = require('./inventoryStock.controller');
+module.exports.purchaseOrderController = require('./purchaseOrder.controller');
