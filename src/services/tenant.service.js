@@ -1,9 +1,9 @@
+/* eslint-disable import/no-self-import */
 /* eslint-disable no-unused-expressions */
 const httpStatus = require('http-status');
 const { RateLimiterMongo } = require('rate-limiter-flexible');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const tenantService = require('./tenant.service');
 const tokenService = require('./token.service');
 const ApiError = require('../utils/ApiError');
 const { tokenTypes } = require('../config/tokens');
@@ -11,6 +11,14 @@ const config = require('../config/config');
 const { Tenant } = require('../models');
 const EventEmitter = require('../utils/EventEmitter');
 
+const getTenantByEmail = async (email) => {
+  const tenant = await Tenant.findOne({ email });
+  return tenant;
+};
+const getTenantById = async (id) => {
+  const tenant = await Tenant.findById(id);
+  return tenant;
+};
 const login = async (email, password, ipAddr) => {
   const rateLimiterOptions = {
     storeClient: mongoose.connection,
@@ -38,9 +46,9 @@ const login = async (email, password, ipAddr) => {
 
   const promises = [slowerBruteLimiter.consume(ipAddr)];
 
-  const tenant = await tenantService.getTenantByEmail(email);
-  if (!tenant || !(await tenant.isPasswordMatch(password))) {
-    tenant &&
+  const user = await getTenantByEmail(email);
+  if (!user || !(await user.isPasswordMatch(password))) {
+    user &&
       promises.push(
         emailIpBruteLimiter.consume(`${email}_${ipAddr}`),
         emailBruteLimiter.consume(email),
@@ -49,7 +57,7 @@ const login = async (email, password, ipAddr) => {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
 
-  return tenant;
+  return user;
 };
 
 const refreshAuthToken = async (refreshToken) => {
@@ -58,7 +66,7 @@ const refreshAuthToken = async (refreshToken) => {
       refreshToken,
       tokenTypes.REFRESH,
     );
-    const tenant = await tenantService.getTenantById(refreshTokenDoc.user);
+    const tenant = await getTenantById(refreshTokenDoc.user);
     if (!tenant) {
       throw new Error();
     }
@@ -75,16 +83,6 @@ const createTenant = async (tenantBody) => {
   }
   const tenant = await Tenant.create(tenantBody);
   EventEmitter.emit('signup', tenant);
-  return tenant;
-};
-
-const getTenantByEmail = async (email) => {
-  const tenant = await Tenant.findOne({ email });
-  return tenant;
-};
-
-const getTenantById = async (id) => {
-  const tenant = await Tenant.findById(id);
   return tenant;
 };
 

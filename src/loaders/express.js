@@ -18,7 +18,7 @@ const commentRouter = require('../routes/comment.route');
 const { errorHandler, errorConverter } = require('../middlewares/error');
 const ApiError = require('../utils/ApiError');
 const morgan = require('../config/morgan');
-const { jwtStrategy } = require('../config/passport');
+const { jwtStrategy, jwtStrategytentant } = require('../config/passport');
 const { cspOptions, env } = require('../config/config');
 
 module.exports = async (app) => {
@@ -28,6 +28,8 @@ module.exports = async (app) => {
   // jwt authentication
   app.use(passport.initialize());
   passport.use('jwt', jwtStrategy);
+
+  passport.use('jwt', jwtStrategytentant);
 
   app.use(express.json());
 
@@ -51,15 +53,14 @@ module.exports = async (app) => {
 
   app.use(blogRouter);
   app.use(commentRouter);
-  
-  app.use(authRouter);
-app.use(tenantRouter)
 
-  
+  app.use(authRouter);
+  app.use(tenantRouter);
+
   app.use(areaRouter);
   app.use(unitRouter);
-  app.use(spaceRouter)
-  app.use(fearureRouter)
+  app.use(spaceRouter);
+  app.use(fearureRouter);
   // path not found 404
   app.use((req, res, next) => {
     next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));

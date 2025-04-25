@@ -13,7 +13,7 @@ const tenantSchema = mongoose.Schema(
     role: {
       type: String,
       enum: ['Owner', 'Renter', 'None'],
-      default: 'Resident',
+      default: 'None',
     },
     phone: {
       type: String,

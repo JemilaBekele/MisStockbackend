@@ -1,11 +1,11 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
-const { tenantService } = require('../services');
+const { tenantService, tokententantService } = require('../services');
 
 // Register tenant
 const createTenant = catchAsync(async (req, res) => {
   const tenant = await tenantService.createTenant(req.body);
-  const tokens = await tenantService.generateAuthTokens(tenant.id);
+  const tokens = await tokententantService.generateAuthTokens(tenant.id);
   res.status(httpStatus.CREATED).send({ tenant, tokens });
 });
 
@@ -15,9 +15,9 @@ const login = catchAsync(async (req, res) => {
   const tenant = await tenantService.login(
     email,
     password,
-    req.connection.remoteAddress
+    req.connection.remoteAddress,
   );
-  const tokens = await tenantService.generateAuthTokens(tenant.id);
+  const tokens = await tokententantService.generateAuthTokens(tenant.id);
   res.status(httpStatus.OK).send({ tenant, tokens });
 });
 
@@ -38,7 +38,11 @@ const updateTenant = catchAsync(async (req, res) => {
 const changePassword = catchAsync(async (req, res) => {
   const { tenantId } = req.params;
   const { oldPassword, newPassword } = req.body;
-  const updatedTenant = await tenantService.changePassword(tenantId, oldPassword, newPassword);
+  const updatedTenant = await tenantService.changePassword(
+    tenantId,
+    oldPassword,
+    newPassword,
+  );
   res.status(httpStatus.OK).send({ tenant: updatedTenant });
 });
 
@@ -50,7 +54,7 @@ const deleteTenant = catchAsync(async (req, res) => {
 });
 
 module.exports = {
-    createTenant,
+  createTenant,
   login,
   refreshToken,
   updateTenant,
