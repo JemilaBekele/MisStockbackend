@@ -19,8 +19,8 @@ const inventoryItemSchema = new mongoose.Schema(
       required: true,
     },
     details: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
+      type: String,
+      trim: true,
     },
     assignedUserId: {
       type: mongoose.Schema.Types.ObjectId,
