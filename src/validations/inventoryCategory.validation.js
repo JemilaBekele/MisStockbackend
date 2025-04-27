@@ -5,7 +5,6 @@ const createInventoryCategorySchema = {
   body: Joi.object().keys({
     name: Joi.string().required(),
     description: Joi.string().optional().allow(''),
-    code: Joi.string().required().uppercase(),
     isAsset: Joi.boolean().required(),
   }),
 };
@@ -15,7 +14,6 @@ const updateInventoryCategorySchema = {
   body: Joi.object().keys({
     name: Joi.string().optional(),
     description: Joi.string().optional().allow(''),
-    code: Joi.string().uppercase().optional(),
     isAsset: Joi.boolean().optional(),
   }),
 };

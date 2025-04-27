@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
-const inventoryCategoryService = require('../services');
+const { inventoryCategoryService } = require('../services');
 
 // Create a new inventory category
 const createInventoryCategory = catchAsync(async (req, res) => {

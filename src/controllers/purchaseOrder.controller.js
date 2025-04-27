@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
-const purchaseOrderService = require('../services');
+const { purchaseOrderService } = require('../services');
 
 // Create a new purchase order
 const createPurchaseOrder = catchAsync(async (req, res) => {

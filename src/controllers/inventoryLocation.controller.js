@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
-const inventoryLocationService = require('../services');
+const { inventoryLocationService } = require('../services');
 
 // Create a new inventory location
 const createInventoryLocation = catchAsync(async (req, res) => {

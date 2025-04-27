@@ -21,8 +21,8 @@ const updateInventoryLocationSchema = {
     type: Joi.string()
       .valid('Storage', 'Office', 'Laboratory', 'Warehouse', 'Other')
       .optional(),
-    zone: Joi.string().trim().optional(),
-    notes: Joi.string().trim().optional(),
+    zone: Joi.string().allow('', null).optional(),
+    notes: Joi.string().allow('', null).optional(),
   }),
 };
 

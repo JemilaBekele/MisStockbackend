@@ -24,6 +24,7 @@ const inventoryLocationSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true,
+      required: false,
     },
   },
   {
