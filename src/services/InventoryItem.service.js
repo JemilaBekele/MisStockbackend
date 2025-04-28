@@ -2,7 +2,7 @@ const httpStatus = require('http-status');
 const {
   InventoryItem,
   InventoryCategory,
-  InventoryLocation,
+  Unit,
   User,
   PurchaseOrder,
 } = require('../models');
@@ -20,7 +20,7 @@ const createInventoryItem = async (inventoryItemBody) => {
   }
 
   // Check if location exists
-  const location = await InventoryLocation.findById(locationId);
+  const location = await Unit.findById(locationId);
   if (!location) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Location not found');
   }
@@ -48,7 +48,11 @@ const createInventoryItem = async (inventoryItemBody) => {
 
 // Get Inventory Item by ID
 const getInventoryItemById = async (id) => {
-  const inventoryItem = await InventoryItem.findById(id);
+  const inventoryItem = await InventoryItem.findById(id)
+    .populate('categoryId', 'name') // Populate InventoryCategory, only fetching the categoryName
+    .populate('assignedUserId', 'name') // Populate User, only fetching the user's name
+    .populate('locationId', 'name')
+    .exec();
   if (!inventoryItem) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Inventory item not found');
   }
@@ -57,7 +61,11 @@ const getInventoryItemById = async (id) => {
 
 // Get all Inventory Items
 const getAllInventoryItems = async () => {
-  const inventoryItems = await InventoryItem.find().sort({ itemName: 1 });
+  const inventoryItems = await InventoryItem.find()
+    .sort({ itemName: 1 })
+    .populate('categoryId', 'name') // Populate InventoryCategory, only fetching the categoryName
+    .populate('assignedUserId', 'name') // Populate User, only fetching the user's name
+    .populate('locationId', 'name'); // Populate Location, only fetching the locationName
   return {
     inventoryItems,
     count: inventoryItems.length,
@@ -78,7 +86,7 @@ const updateInventoryItem = async (id, updateBody) => {
 
   // Check if location exists
   if (updateBody.locationId) {
-    const location = await InventoryLocation.findById(updateBody.locationId);
+    const location = await Unit.findById(updateBody.locationId);
     if (!location) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Location not found');
     }

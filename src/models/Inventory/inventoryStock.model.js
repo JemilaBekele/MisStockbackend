@@ -10,7 +10,12 @@ const inventoryStockSchema = new mongoose.Schema(
     },
     locationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'InventoryLocation',
+      ref: 'Unit',
+      required: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
     },
     quantity: {

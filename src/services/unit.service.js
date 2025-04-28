@@ -26,6 +26,16 @@ const getAllUnits = async () => {
   };
 };
 
+const getAllstore = async () => {
+  const units = await Unit.find({ type: 'Store' })
+    .sort({ createdAt: -1 })
+    .populate('areaId')
+    .populate('roomIds');
+  return {
+    units,
+    count: units.length,
+  };
+};
 // Get units by area
 const getUnitsByArea = async (areaId) => {
   const units = await Unit.find({ areaId })
@@ -61,6 +71,7 @@ module.exports = {
   createUnit,
   getUnitById,
   getAllUnits,
+  getAllstore,
   getUnitsByArea,
   updateUnit,
   deleteUnit,

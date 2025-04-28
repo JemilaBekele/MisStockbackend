@@ -46,7 +46,12 @@ const createInventoryLog = async (inventoryLogBody) => {
 
 // Get Inventory Log by ID
 const getInventoryLogById = async (id) => {
-  const inventoryLog = await InventoryLog.findById(id);
+  const inventoryLog = await InventoryLog.findById(id)
+    .populate('itemId', 'itemName') // Populate InventoryItem with itemName and categoryId
+    .populate('userId', 'name') // Populate User with name
+    .populate('assignedTo', 'name') // Populate User with assigned person's name
+    .populate('purchaseId', 'status')
+    .exec();
   if (!inventoryLog) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Inventory log not found');
   }
@@ -55,7 +60,12 @@ const getInventoryLogById = async (id) => {
 
 // Get all Inventory Logs
 const getAllInventoryLogs = async () => {
-  const inventoryLogs = await InventoryLog.find().sort({ timestamp: -1 });
+  const inventoryLogs = await InventoryLog.find()
+    .sort({ timestamp: -1 })
+    .populate('itemId', 'itemName') // Populate InventoryItem with itemName and categoryId
+    .populate('userId', 'name') // Populate User with name
+    .populate('assignedTo', 'name') // Populate User with assigned person's name
+    .populate('purchaseId', 'status'); // Populate PurchaseOrder with supplierId and orderedBy
   return {
     inventoryLogs,
     count: inventoryLogs.length,

@@ -1,13 +1,10 @@
 const Joi = require('joi');
 
-
 const createUnitSchema = {
   body: Joi.object().keys({
     unitNumber: Joi.string().required().trim(),
     areaId: Joi.string().required(), // Validating ObjectId type as a string
-    type: Joi.string()
-      .valid('Apartment', 'OfficeSuite')
-      .required(),
+    type: Joi.string().valid('Apartment', 'OfficeSuite', 'Store').required(),
     roomIds: Joi.array().items(Joi.string()).optional(), // Validating ObjectId type as a string
     totalAreaSqM: Joi.number().required(),
     status: Joi.string()
@@ -22,14 +19,10 @@ const updateUnitSchema = {
   body: Joi.object().keys({
     unitNumber: Joi.string().optional().trim(),
     areaId: Joi.string().optional(), // Validating ObjectId type as a string
-    type: Joi.string()
-      .valid('Apartment', 'OfficeSuite')
-      .optional(),
+    type: Joi.string().valid('Apartment', 'OfficeSuite', 'Store').optional(),
     roomIds: Joi.array().items(Joi.string()).optional(), // Validating ObjectId type as a string
     totalAreaSqM: Joi.number().optional(),
-    status: Joi.string()
-      .valid('Occupied', 'Available', 'Reserved')
-      .optional(),
+    status: Joi.string().valid('Occupied', 'Available', 'Reserved').optional(),
     notes: Joi.string().optional().trim(),
   }),
 };

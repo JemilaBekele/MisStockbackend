@@ -13,22 +13,15 @@ const purchaseOrderSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    orderedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    receivedAt: {
-      type: Date,
-    },
+    orderedAt: { type: Date, default: Date.now },
+    receivedAt: { type: Date },
     status: {
       type: String,
       enum: ['Pending', 'Partially Received', 'Received', 'Cancelled'],
       default: 'Pending',
     },
-    notes: {
-      type: String,
-      trim: true,
-    },
+    notes: { type: String, trim: true },
+    shortCode: { type: String, unique: true, trim: true },
     items: [
       {
         itemId: {
@@ -36,33 +29,34 @@ const purchaseOrderSchema = new mongoose.Schema(
           ref: 'InventoryItem',
           required: true,
         },
-        quantity: {
-          type: Number,
-          required: true,
-        },
-        unitPrice: {
-          type: Number,
-          required: true,
-        },
-        totalPrice: {
-          type: Number,
+        quantity: { type: Number, required: true },
+        unitPrice: { type: Number, required: true },
+        totalPrice: { type: Number },
+        locationId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'InventoryLocation',
         },
       },
     ],
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-// Auto-calculate totalPrice for each item
-purchaseOrderSchema.pre('save', function (next) {
-  if (this.items && Array.isArray(this.items)) {
-    this.items = this.items.map((item) => ({
+purchaseOrderSchema.pre('save', async function (next) {
+  const purchaseOrder = this;
+
+  if (purchaseOrder.items && Array.isArray(purchaseOrder.items)) {
+    purchaseOrder.items = purchaseOrder.items.map((item) => ({
       ...item,
       totalPrice: item.quantity * item.unitPrice,
     }));
   }
+
+  if (!purchaseOrder.shortCode) {
+    const count = await mongoose.model('PurchaseOrder').countDocuments();
+    purchaseOrder.shortCode = `PO-${String(count + 1).padStart(4, '0')}`;
+  }
+
   next();
 });
 

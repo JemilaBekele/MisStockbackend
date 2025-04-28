@@ -16,7 +16,8 @@ const createPurchaseOrderSchema = {
           itemId: Joi.string().hex().length(24).required(),
           quantity: Joi.number().required(),
           unitPrice: Joi.number().required(),
-          totalPrice: Joi.number().optional(), // Optional because it's auto-calculated
+          totalPrice: Joi.number().optional(),
+          locationId: Joi.string().hex().length(24).required(), // Optional because it's auto-calculated
         }),
       )
       .required(),
@@ -32,7 +33,7 @@ const updatePurchaseOrderSchema = {
     status: Joi.string()
       .valid('Pending', 'Partially Received', 'Received', 'Cancelled')
       .optional(),
-    notes: Joi.string().trim().optional(),
+    notes: Joi.string().trim().optional().allow(''),
     items: Joi.array()
       .items(
         Joi.object().keys({
@@ -40,6 +41,7 @@ const updatePurchaseOrderSchema = {
           quantity: Joi.number().required(),
           unitPrice: Joi.number().required(),
           totalPrice: Joi.number().optional(),
+          locationId: Joi.string().hex().length(24).required(), // Optional because it's auto-calculated
         }),
       )
       .optional(),

@@ -13,7 +13,6 @@ const createInventoryItemSchema = {
   body: Joi.object().keys({
     itemName: Joi.string().required(),
     categoryId: objectId.required(),
-    unitType: Joi.string().valid('Consumable', 'Asset').required(),
     details: Joi.string().optional().allow(''),
     assignedUserId: objectId.optional(),
     purchaseId: objectId.optional(),
@@ -30,7 +29,6 @@ const updateInventoryItemSchema = {
   body: Joi.object().keys({
     itemName: Joi.string().optional(),
     categoryId: objectId.optional(),
-    unitType: Joi.string().valid('Consumable', 'Asset').optional(),
     details: Joi.string().optional().allow(''),
     assignedUserId: objectId.optional(),
     purchaseId: objectId.optional(),

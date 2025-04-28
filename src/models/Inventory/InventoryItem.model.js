@@ -13,11 +13,6 @@ const inventoryItemSchema = new mongoose.Schema(
       ref: 'InventoryCategory',
       required: true,
     },
-    unitType: {
-      type: String,
-      enum: ['Consumable', 'Asset'],
-      required: true,
-    },
     details: {
       type: String,
       trim: true,
@@ -32,7 +27,7 @@ const inventoryItemSchema = new mongoose.Schema(
     },
     locationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Location',
+      ref: 'Unit',
     },
     lastUsed: {
       type: Date,
@@ -42,11 +37,28 @@ const inventoryItemSchema = new mongoose.Schema(
       enum: ['Available', 'In Use', 'Broken', 'Lost', 'Disposed'],
       default: 'Available',
     },
+    stockCode: {
+      type: String,
+      unique: true,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+// Auto-generate stock code if missing
+inventoryItemSchema.pre('save', async function (next) {
+  if (!this.stockCode) {
+    const prefix = this.itemName
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .slice(0, 3);
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+    this.stockCode = `${prefix}-${randomNumber}`;
+  }
+  next();
+});
 
 inventoryItemSchema.plugin(toJson);
 

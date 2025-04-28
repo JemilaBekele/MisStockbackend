@@ -26,6 +26,11 @@ const getAllUnits = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).json(units);
 });
 
+
+const getAllstore = catchAsync(async (req, res) => {
+  const units = await unitService.getAllstore();
+  res.status(httpStatus.OK).json(units);
+});
 // Get units by area
 const getUnitsByArea = catchAsync(async (req, res) => {
   const units = await unitService.getUnitsByArea(req.params.areaId);
@@ -35,7 +40,9 @@ const getUnitsByArea = catchAsync(async (req, res) => {
 // Update a unit
 const updateUnit = catchAsync(async (req, res) => {
   const unit = await unitService.updateUnit(req.params.id, req.body);
-  res.status(httpStatus.OK).send({ success: true, message: 'Unit updated successfully', unit });
+  res
+    .status(httpStatus.OK)
+    .send({ success: true, message: 'Unit updated successfully', unit });
 });
 
 // Delete a unit
@@ -48,6 +55,7 @@ module.exports = {
   createUnit,
   getUnitById,
   getAllUnits,
+  getAllstore,
   getUnitsByArea,
   updateUnit,
   deleteUnit,

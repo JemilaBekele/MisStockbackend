@@ -18,13 +18,13 @@ const inventoryLogSchema = new mongoose.Schema(
         'Disposed',
         'Updated',
         'Checked',
+        'Recorded',
       ],
       required: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,

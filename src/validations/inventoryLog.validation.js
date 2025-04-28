@@ -12,14 +12,15 @@ const createInventoryLogSchema = {
         'Disposed',
         'Updated',
         'Checked',
+        'Recorded',
       )
       .required(),
     userId: Joi.string().hex().length(24).required(),
-    assignedTo: Joi.string().hex().length(24).optional(),
-    purchaseId: Joi.string().hex().length(24).optional(),
+    assignedTo: Joi.string().hex().length(24).allow('', null).optional(), // ✅ FIXED
+    purchaseId: Joi.string().hex().length(24).allow('', null).optional(), // (recommended)
     quantityChanged: Joi.number().required(),
     timestamp: Joi.date().optional(),
-    notes: Joi.string().trim().optional(),
+    notes: Joi.string().trim().optional().allow(''),
   }),
 };
 
