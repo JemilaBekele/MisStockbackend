@@ -36,6 +36,7 @@ const getAllstore = async () => {
     count: units.length,
   };
 };
+
 // Get units by area
 const getUnitsByArea = async (areaId) => {
   const units = await Unit.find({ areaId })

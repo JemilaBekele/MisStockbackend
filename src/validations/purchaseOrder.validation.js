@@ -9,7 +9,7 @@ const createPurchaseOrderSchema = {
     status: Joi.string()
       .valid('Pending', 'Partially Received', 'Received', 'Cancelled')
       .optional(),
-    notes: Joi.string().trim().optional(),
+    notes: Joi.string().trim().optional().allow(''),
     items: Joi.array()
       .items(
         Joi.object().keys({

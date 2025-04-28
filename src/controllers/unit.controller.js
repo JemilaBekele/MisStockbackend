@@ -26,7 +26,6 @@ const getAllUnits = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).json(units);
 });
 
-
 const getAllstore = catchAsync(async (req, res) => {
   const units = await unitService.getAllstore();
   res.status(httpStatus.OK).json(units);
@@ -48,7 +47,7 @@ const updateUnit = catchAsync(async (req, res) => {
 // Delete a unit
 const deleteUnit = catchAsync(async (req, res) => {
   const response = await unitService.deleteUnit(req.params.id);
- res.status(httpStatus.OK).send(response);
+  res.status(httpStatus.OK).send(response);
 });
 
 module.exports = {

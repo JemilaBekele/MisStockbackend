@@ -38,9 +38,7 @@ const createInventoryStock = async (inventoryStockBody, requestUserId) => {
     quantityChanged: inventoryStock.quantity,
     timestamp: new Date(),
     notes:
-      `${inventoryStock.quantity} units of ${item.itemName} (${
-        item.sku || item.id
-      }) ` +
+      `${inventoryStock.quantity} units of ${item.itemName} (${item?.stockCode}) ` +
       `recorded at ${location.name} (Floor ${location.floor}) ` +
       `with status: ${inventoryStock.status}`,
   };
@@ -63,7 +61,7 @@ const createInventoryStock = async (inventoryStockBody, requestUserId) => {
 const getInventoryStockById = async (id) => {
   const inventoryStock = await InventoryStock.findById(id)
     .populate('itemId', 'itemName') // Populate InventoryItem with itemName and categoryId
-    .populate('locationId', 'name')
+    .populate('locationId', 'unitNumber')
     .exec();
   if (!inventoryStock) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Inventory stock not found');
@@ -76,7 +74,7 @@ const getAllInventoryStocks = async () => {
   const inventoryStocks = await InventoryStock.find()
     .sort({ lastUpdated: -1 })
     .populate('itemId', 'itemName') // Populate InventoryItem with itemName and categoryId
-    .populate('locationId', 'name'); // Populate InventoryLocation with locationName
+    .populate('locationId', 'unitNumber'); // Populate InventoryLocation with locationName
   return {
     inventoryStocks,
     count: inventoryStocks.length,
@@ -86,8 +84,11 @@ const getAllInventoryStocks = async () => {
 // Update Inventory Stock
 const updateInventoryStock = async (id, updateBody) => {
   const inventoryStock = await getInventoryStockById(id);
+  if (!inventoryStock) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Inventory stock not found');
+  }
 
-  // Check if item exists
+  // Check if item exists (if itemId is changing)
   if (updateBody.itemId) {
     const item = await InventoryItem.findById(updateBody.itemId);
     if (!item) {
@@ -95,7 +96,7 @@ const updateInventoryStock = async (id, updateBody) => {
     }
   }
 
-  // Check if location exists
+  // Check if location exists (if locationId is changing)
   if (updateBody.locationId) {
     const location = await Unit.findById(updateBody.locationId);
     if (!location) {
@@ -103,9 +104,41 @@ const updateInventoryStock = async (id, updateBody) => {
     }
   }
 
+  const previousQuantity = inventoryStock.quantity;
+
   // Update the inventory stock
   Object.assign(inventoryStock, updateBody);
   await inventoryStock.save();
+
+  // After saving, create a log entry
+  const item = await InventoryItem.findById(inventoryStock.itemId);
+  const location = await Unit.findById(inventoryStock.locationId);
+
+  const logEntry = {
+    itemId: inventoryStock.itemId,
+    action: 'Updated',
+    userId: inventoryStock.userId,
+    quantityChanged: inventoryStock.quantity - previousQuantity, // difference
+    timestamp: new Date(),
+    notes:
+      `${item?.itemName ?? 'Unknown Item'} stock updated at ` +
+      `${location?.unitNumber ?? 'Unknown Location'} (type ${
+        location?.type ?? '-'
+      }) ` +
+      `to ${inventoryStock.quantity} units with status: ${inventoryStock.status}`,
+  };
+
+  await InventoryLog.create(logEntry);
+
+  // Optionally: Update the item status too, like in createInventoryStock
+  if (item && item.status !== inventoryStock.status) {
+    await InventoryItem.findByIdAndUpdate(
+      inventoryStock.itemId,
+      { status: inventoryStock.status },
+      { new: true },
+    );
+  }
+
   return inventoryStock;
 };
 

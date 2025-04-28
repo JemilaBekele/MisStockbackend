@@ -141,7 +141,7 @@ const getPurchaseOrderById = async (id) => {
     .populate('supplierId', 'name email') // Populate supplierId with name and email from User
     .populate('orderedBy', 'name email') // Populate orderedBy with name and email from User
     .populate('items.itemId', 'itemName') // Populate itemId in items with itemName and categoryId from InventoryItem
-    .populate('items.locationId', 'locationName') // Populate locationId in items with locationName from Location
+    .populate('items.locationId', 'unitNumber type') // Populate locationId in items with locationName from Location
     .exec();
 
   if (!purchaseOrder) {
@@ -153,10 +153,11 @@ const getPurchaseOrderById = async (id) => {
 // Get all Purchase Orders
 const getAllPurchaseOrders = async () => {
   const purchaseOrders = await PurchaseOrder.find()
+    .sort({ createdAt: -1 })
     .populate('supplierId', 'name email') // Populate supplierId with name and email from User
     .populate('orderedBy', 'name email') // Populate orderedBy with name and email from User
     .populate('items.itemId', 'itemName') // Populate itemId in items with itemName and categoryId from InventoryItem
-    .populate('items.locationId', 'locationName') // Populate locationId in items with locationName from Location
+    .populate('items.locationId', 'unitNumber type') // Populate locationId in items with locationName from Location
     .exec();
 
   return {

@@ -34,7 +34,7 @@ const purchaseOrderSchema = new mongoose.Schema(
         totalPrice: { type: Number },
         locationId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: 'InventoryLocation',
+          ref: 'Unit',
         },
       },
     ],

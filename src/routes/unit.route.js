@@ -6,7 +6,7 @@ const auth = require('../middlewares/auth');
 const { unitValidation } = require('../validations');
 const { unitController } = require('../controllers');
 
-// Create a unit
+// Create a unit getAll
 router.post(
   '/api/unit',
   auth,

@@ -15,6 +15,8 @@ const createInventoryStockSchema = {
 
 const updateInventoryStockSchema = {
   body: Joi.object().keys({
+    userId: Joi.string().hex().length(24).required(),
+
     itemId: Joi.string().hex().length(24).optional(),
     locationId: Joi.string().hex().length(24).optional(),
     quantity: Joi.number().min(0).optional(),
