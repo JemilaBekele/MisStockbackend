@@ -17,3 +17,4 @@ module.exports.InventoryLocation = require('./Inventory/inventoryLocation.model'
 module.exports.InventoryLog = require('./Inventory/inventoryLog.model');
 module.exports.InventoryStock = require('./Inventory/inventoryStock.model');
 module.exports.PurchaseOrder = require('./Inventory/purchaseOrder.model');
+module.exports.InventoryRequest = require('./Inventory/inventoryrequest.model');

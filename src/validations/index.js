@@ -18,3 +18,4 @@ module.exports.inventoryLocationValidation = require('./inventoryLocation.valida
 module.exports.inventoryLogValidation = require('./inventoryLog.validation');
 module.exports.inventoryStockValidation = require('./inventoryStock.validation');
 module.exports.purchaseOrderValidation = require('./purchaseOrder.validation');
+module.exports.inventoryRequestValidation = require('./inventoryrequest.validation');

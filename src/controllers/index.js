@@ -17,3 +17,4 @@ module.exports.inventoryLocationController = require('./inventoryLocation.contro
 module.exports.inventoryLogController = require('./inventoryLog.controller');
 module.exports.inventoryStockController = require('./inventoryStock.controller');
 module.exports.purchaseOrderController = require('./purchaseOrder.controller');
+module.exports.inventoryRequestController = require('./inventoryrequuest.controller');

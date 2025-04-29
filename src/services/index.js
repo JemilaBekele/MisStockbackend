@@ -20,3 +20,4 @@ module.exports.inventoryLocationService = require('./inventoryLocation.service')
 module.exports.inventoryLogService = require('./inventoryLog.service');
 module.exports.inventoryStockService = require('./inventoryStock.service');
 module.exports.purchaseOrderService = require('./purchaseOrder.service');
+module.exports.inventoryRequestService = require('./inventoryrequest.service');
