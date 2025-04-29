@@ -51,7 +51,6 @@ const getInventoryItemById = async (id) => {
   const inventoryItem = await InventoryItem.findById(id)
     .populate('categoryId', 'name') // Populate InventoryCategory, only fetching the categoryName
     .populate('assignedUserId', 'name') // Populate User, only fetching the user's name
-    .populate('locationId', 'unitNumber')
     .exec();
   if (!inventoryItem) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Inventory item not found');
@@ -64,8 +63,8 @@ const getAllInventoryItems = async () => {
   const inventoryItems = await InventoryItem.find()
     .sort({ itemName: 1 })
     .populate('categoryId', 'name') // Populate InventoryCategory, only fetching the categoryName
-    .populate('assignedUserId', 'name') // Populate User, only fetching the user's name
-    .populate('locationId', 'unitNumber'); // Populate Location, only fetching the locationName
+    .populate('assignedUserId', 'name')
+    .exec(); // Populate User, only fetching the user's name
   return {
     inventoryItems,
     count: inventoryItems.length,

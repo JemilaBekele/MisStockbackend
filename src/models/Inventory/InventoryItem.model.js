@@ -25,10 +25,6 @@ const inventoryItemSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PurchaseOrder',
     },
-    locationId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Unit',
-    },
     lastUsed: {
       type: Date,
     },

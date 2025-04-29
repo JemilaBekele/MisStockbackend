@@ -16,7 +16,6 @@ const createInventoryItemSchema = {
     details: Joi.string().optional().allow(''),
     assignedUserId: objectId.optional(),
     purchaseId: objectId.optional(),
-    locationId: objectId.optional(),
     lastUsed: Joi.date().optional(),
     status: Joi.string()
       .valid('Available', 'In Use', 'Broken', 'Lost', 'Disposed')
@@ -32,7 +31,6 @@ const updateInventoryItemSchema = {
     details: Joi.string().optional().allow(''),
     assignedUserId: objectId.optional(),
     purchaseId: objectId.optional(),
-    locationId: objectId.optional(),
     lastUsed: Joi.date().optional(),
     status: Joi.string()
       .valid('Available', 'In Use', 'Broken', 'Lost', 'Disposed')
