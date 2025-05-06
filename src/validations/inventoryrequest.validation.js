@@ -29,7 +29,6 @@ const createInventoryRequestSchema = {
     status: Joi.string()
       .valid('Pending', 'Approved', 'Rejected', 'Fulfilled', 'Cancelled')
       .optional(),
-    approvals: Joi.array().items(approvalSchema).optional(),
   }),
 };
 

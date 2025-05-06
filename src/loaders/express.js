@@ -20,6 +20,7 @@ const InventoryLocationRouter = require('../routes/inventoryLocation.route');
 const InventoryLogRouter = require('../routes/inventoryLog.route');
 const InventoryStockRouter = require('../routes/inventoryStock.route');
 const PurchaseOrderRouter = require('../routes/purchaseOrder.route');
+const InventoryRequestRouter = require('../routes/inventoryrequest.route');
 
 const commentRouter = require('../routes/comment.route');
 const { errorHandler, errorConverter } = require('../middlewares/error');
@@ -31,13 +32,10 @@ const { cspOptions, env } = require('../config/config');
 module.exports = async (app) => {
   app.use(morgan.successHandler);
   app.use(morgan.errorHandler);
-
   // jwt authentication
   app.use(passport.initialize());
   passport.use('jwt', jwtStrategy);
-
   app.use(express.json());
-
   // security
   app.use(xss());
   app.use(
@@ -46,7 +44,6 @@ module.exports = async (app) => {
     }),
   );
   app.use(mongoSanitize());
-
   if (env === 'production') {
     app.use(cors({ origin: 'url' }));
     app.options('*', cors({ origin: 'url' }));
@@ -55,18 +52,14 @@ module.exports = async (app) => {
     app.use(cors());
     app.options('*', cors());
   }
-
   app.use(blogRouter);
   app.use(commentRouter);
-
   app.use(authRouter);
   app.use(tenantRouter);
-
   app.use(areaRouter);
   app.use(unitRouter);
   app.use(spaceRouter);
   app.use(fearureRouter);
-
   // inventory
   app.use(InventoryCategoryRouter);
   app.use(InventoryItemRouter);
@@ -74,11 +67,11 @@ module.exports = async (app) => {
   app.use(InventoryLogRouter);
   app.use(InventoryStockRouter);
   app.use(PurchaseOrderRouter);
+  app.use(InventoryRequestRouter);
   // path not found 404
   app.use((req, res, next) => {
     next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
   });
-
   app.use(errorConverter);
   app.use(errorHandler);
   return app;
