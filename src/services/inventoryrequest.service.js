@@ -4,7 +4,8 @@ const ApiError = require('../utils/ApiError');
 
 // Create Inventory Request
 const createInventoryRequest = async (requestBody) => {
-  const { itemId, requestedBy, locationId, approvals } = requestBody;
+  const { itemId, requestedBy, locationId, itemLocations, approvals } =
+    requestBody;
 
   // Validate item
   const item = await InventoryItem.findById(itemId);
@@ -18,11 +19,41 @@ const createInventoryRequest = async (requestBody) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Requesting user not found');
   }
 
-  // Validate location if provided
-  if (locationId) {
+  // Validate location if using simple request format
+  if (locationId && !itemLocations) {
     const location = await Unit.findById(locationId);
     if (!location) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Location not found');
+    }
+  }
+
+  // Validate itemLocations if using complex request format
+  if (itemLocations && itemLocations.length > 0) {
+    await Promise.all(
+      itemLocations.map(async (loc) => {
+        const location = await Unit.findById(loc.locationId);
+        if (!location) {
+          throw new ApiError(
+            httpStatus.NOT_FOUND,
+            `Location not found: ${loc.locationId}`,
+          );
+        }
+        if (!loc.quantity || loc.quantity < 1) {
+          throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            `Invalid quantity for location ${loc.locationId}`,
+          );
+        }
+      }),
+    );
+
+    // Ensure we don't have duplicate locations
+    const locationIds = itemLocations.map((loc) => loc.locationId.toString());
+    if (new Set(locationIds).size !== locationIds.length) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Duplicate locations in itemLocations',
+      );
     }
   }
 
@@ -41,6 +72,14 @@ const createInventoryRequest = async (requestBody) => {
     );
   }
 
+  // Ensure either quantity/locationId OR itemLocations is provided, but not both
+  if ((locationId || requestBody.quantity) && itemLocations) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cannot specify both quantity/locationId and itemLocations',
+    );
+  }
+
   const inventoryRequest = await InventoryRequest.create(requestBody);
   return inventoryRequest;
 };
@@ -50,7 +89,8 @@ const getInventoryRequestById = async (id) => {
   const request = await InventoryRequest.findById(id)
     .populate('itemId', 'itemName')
     .populate('requestedBy', 'name')
-    .populate('locationId', 'unitNumber')
+    .populate('locationId', 'unitNumber floor type')
+    .populate('itemLocations.locationId', 'unitNumber floor type')
     .populate('approvals.approverId', 'name');
 
   if (!request) {
@@ -60,12 +100,13 @@ const getInventoryRequestById = async (id) => {
 };
 
 // Get all Inventory Requests
-const getAllInventoryRequests = async () => {
-  const requests = await InventoryRequest.find()
+const getAllInventoryRequests = async (filter = {}) => {
+  const requests = await InventoryRequest.find(filter)
     .sort({ createdAt: -1 })
     .populate('itemId', 'itemName')
     .populate('requestedBy', 'name')
-    .populate('locationId', 'unitNumber')
+    .populate('locationId', 'unitNumber floor type')
+    .populate('itemLocations.locationId', 'unitNumber floor type')
     .populate('approvals.approverId', 'name');
 
   return {
@@ -92,11 +133,55 @@ const updateInventoryRequest = async (id, updateBody) => {
     }
   }
 
-  if (updateBody.locationId) {
+  // Validate location if updating simple request format
+  if (updateBody.locationId && !updateBody.itemLocations) {
     const location = await Unit.findById(updateBody.locationId);
     if (!location) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Location not found');
     }
+  }
+
+  // Validate itemLocations if updating complex request format
+  if (updateBody.itemLocations && updateBody.itemLocations.length > 0) {
+    await Promise.all(
+      updateBody.itemLocations.map(async (loc) => {
+        const location = await Unit.findById(loc.locationId);
+        if (!location) {
+          throw new ApiError(
+            httpStatus.NOT_FOUND,
+            `Location not found: ${loc.locationId}`,
+          );
+        }
+        if (!loc.quantity || loc.quantity < 1) {
+          throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            `Invalid quantity for location ${loc.locationId}`,
+          );
+        }
+      }),
+    );
+
+    // Ensure we don't have duplicate locations
+    const locationIds = updateBody.itemLocations.map((loc) =>
+      loc.locationId.toString(),
+    );
+    if (new Set(locationIds).size !== locationIds.length) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Duplicate locations in itemLocations',
+      );
+    }
+  }
+
+  // Ensure we're not mixing simple and complex formats
+  if (
+    (updateBody.locationId || updateBody.quantity) &&
+    updateBody.itemLocations
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cannot specify both quantity/locationId and itemLocations',
+    );
   }
 
   // Optional: validate updated approvals

@@ -10,42 +10,133 @@ const objectId = Joi.string().custom((value, helpers) => {
 }, 'ObjectId validation');
 
 // Approval Subschema Validation
-const approvalSchema = Joi.object().keys({
-  approverId: objectId.required(),
-  decision: Joi.string().valid('Approved', 'Rejected', 'Pending').optional(),
-  decisionDate: Joi.date().optional(),
-  notes: Joi.string().optional().allow(''),
-});
 
 // Create Inventory Request Validation
 const createInventoryRequestSchema = {
-  body: Joi.object().keys({
+  body: Joi.object({
     type: Joi.string().valid('Purchase', 'StockWithdrawal').required(),
     itemId: objectId.required(),
-    quantity: Joi.number().integer().min(1).required(),
-    requestedBy: objectId.required(),
+
+    quantity: Joi.number().integer().min(1).optional(), // optional, validated in custom logic
     locationId: objectId.optional(),
-    reason: Joi.string().optional().allow(''),
-    status: Joi.string()
-      .valid('Pending', 'Approved', 'Rejected', 'Fulfilled', 'Cancelled')
+
+    itemLocations: Joi.array()
+      .items(
+        Joi.object({
+          locationId: objectId.required(),
+          quantity: Joi.number().integer().min(1).required(),
+        }),
+      )
       .optional(),
-  }),
+
+    requestedBy: objectId.required(),
+    reason: Joi.string().allow('', null),
+    status: Joi.string().valid(
+      'Pending',
+      'Approved',
+      'Rejected',
+      'Fulfilled',
+      'Cancelled',
+    ),
+
+    approvals: Joi.array()
+      .items(
+        Joi.object({
+          approverId: objectId.required(),
+          decision: Joi.string()
+            .valid('Approved', 'Rejected', 'Pending')
+            .default('Pending'),
+          decisionDate: Joi.date(),
+          notes: Joi.string().allow('', null),
+        }),
+      )
+      .optional(),
+  }).custom((value, helpers) => {
+    const hasQuantity = !!value.quantity;
+    const hasItemLocations =
+      Array.isArray(value.itemLocations) && value.itemLocations.length > 0;
+
+    if (hasQuantity && hasItemLocations) {
+      return helpers.error('any.invalid', {
+        message: 'Cannot specify both quantity and itemLocations',
+      });
+    }
+
+    if (!hasQuantity && !hasItemLocations) {
+      return helpers.error('any.invalid', {
+        message: 'Either quantity or itemLocations must be provided',
+      });
+    }
+
+    if (hasQuantity && !value.locationId) {
+      return helpers.error('any.invalid', {
+        message: 'locationId is required when quantity is provided',
+      });
+    }
+
+    return value;
+  }, 'Custom validation for quantity/itemLocations'),
 };
 
 // Update Inventory Request Validation
 const updateInventoryRequestSchema = {
-  body: Joi.object().keys({
+  body: Joi.object({
     type: Joi.string().valid('Purchase', 'StockWithdrawal').optional(),
     itemId: objectId.optional(),
+
     quantity: Joi.number().integer().min(1).optional(),
-    requestedBy: objectId.optional(),
     locationId: objectId.optional(),
-    reason: Joi.string().optional().allow(''),
+
+    itemLocations: Joi.array()
+      .items(
+        Joi.object({
+          locationId: objectId.required(),
+          quantity: Joi.number().integer().min(1).required(),
+        }),
+      )
+      .optional(),
+
+    requestedBy: objectId.optional(),
+    reason: Joi.string().allow('', null).optional(),
     status: Joi.string()
       .valid('Pending', 'Approved', 'Rejected', 'Fulfilled', 'Cancelled')
       .optional(),
-    approvals: Joi.array().items(approvalSchema).optional(),
-  }),
+
+    approvals: Joi.array()
+      .items(
+        Joi.object({
+          approverId: objectId.required(),
+          decision: Joi.string()
+            .valid('Approved', 'Rejected', 'Pending')
+            .default('Pending'),
+          decisionDate: Joi.date(),
+          notes: Joi.string().allow('', null),
+        }),
+      )
+      .optional(),
+  }).custom((value, helpers) => {
+    const hasQuantity = !!value.quantity;
+    const hasItemLocations =
+      Array.isArray(value.itemLocations) && value.itemLocations.length > 0;
+
+    if (hasQuantity && hasItemLocations) {
+      return helpers.error('any.invalid', {
+        message: 'Cannot specify both quantity and itemLocations',
+      });
+    }
+
+    if (!hasQuantity && !hasItemLocations) {
+      return value; // On update, it's OK to omit both (partial update)
+    }
+
+    if (hasQuantity && !value.locationId) {
+      return helpers.error('any.invalid', {
+        message: 'locationId is required when quantity is provided',
+      });
+    }
+
+    return value;
+  }, 'Custom validation for updateInventoryRequest'),
 };
 
 module.exports = {
