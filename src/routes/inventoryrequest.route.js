@@ -37,7 +37,12 @@ router.put(
   validate(inventoryRequestValidation.updateInventoryRequestSchema),
   inventoryRequestController.updateInventoryRequest,
 );
-
+router.put(
+  '/api/inventory-request/approved/:requestId',
+  auth,
+  validate(inventoryRequestValidation.approvalSchema),
+  inventoryRequestController.approveInventoryRequest,
+);
 // Delete an inventory request
 router.delete(
   '/api/inventory-request/:requestId',

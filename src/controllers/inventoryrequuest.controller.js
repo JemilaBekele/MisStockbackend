@@ -38,6 +38,15 @@ const updateInventoryRequest = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ inventoryRequest: updatedRequest });
 });
 
+const approveInventoryRequest = catchAsync(async (req, res) => {
+  const { requestId } = req.params;
+  const updatedRequest = await inventoryRequestService.approveInventoryRequest(
+    requestId,
+    req.body,
+  );
+  res.status(httpStatus.OK).send({ inventoryRequest: updatedRequest });
+});
+
 // Delete inventory request
 const deleteInventoryRequest = catchAsync(async (req, res) => {
   const { requestId } = req.params;
@@ -53,4 +62,5 @@ module.exports = {
   getInventoryRequestById,
   updateInventoryRequest,
   deleteInventoryRequest,
+  approveInventoryRequest,
 };

@@ -138,8 +138,17 @@ const updateInventoryRequestSchema = {
     return value;
   }, 'Custom validation for updateInventoryRequest'),
 };
+// approvalSchema.js
+const approvalSchema = {
+  body: Joi.object({
+    decision: Joi.string().valid('Approved', 'Rejected', 'Pending').required(),
+    notes: Joi.string().allow('', null).optional(),
+    approverId: objectId.required(),
+  }),
+};
 
 module.exports = {
   createInventoryRequestSchema,
   updateInventoryRequestSchema,
+  approvalSchema,
 };
