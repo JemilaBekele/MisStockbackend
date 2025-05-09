@@ -4,7 +4,6 @@ const Joi = require('joi');
 const createFearureSchema = {
   body: Joi.object().keys({
     name: Joi.string().required(),
- 
   }),
 };
 
@@ -12,7 +11,6 @@ const createFearureSchema = {
 const updateFearureSchema = {
   body: Joi.object().keys({
     name: Joi.string().optional(),
-    
   }),
 };
 

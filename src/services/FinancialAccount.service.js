@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const FinancialAccount = require('../models'); // Adjust path as needed
+const { FinancialAccount } = require('../models'); // Adjust path as needed
 const ApiError = require('../utils/ApiError');
 
 // Create FinancialAccount

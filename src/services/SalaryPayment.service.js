@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const SalaryPayment = require('../models'); // Adjust the path as needed
+const { SalaryPayment } = require('../models'); // Adjust the path as needed
 const ApiError = require('../utils/ApiError');
 
 // Create salary payment

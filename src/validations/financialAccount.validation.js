@@ -4,7 +4,7 @@ const Joi = require('joi');
 const createFinancialAccountSchema = {
   body: Joi.object().keys({
     name: Joi.string().required(),
-    type: Joi.string().valid('Cash', 'Bank', 'MobileMoney').required(),
+    type: Joi.string().required(),
     balance: Joi.number().min(0).required(),
   }),
 };

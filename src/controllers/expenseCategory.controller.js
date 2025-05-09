@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
-const expenseCategoryService = require('../services');
+const { expenseCategoryService } = require('../services');
 
 // Create a new expense category
 const createExpenseCategory = catchAsync(async (req, res) => {

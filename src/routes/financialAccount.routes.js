@@ -8,9 +8,9 @@ const auth = require('../middlewares/auth');
 
 // Financial Account Routes
 
-// Create a financial account
+// Create a financeial account
 router.post(
-  '/api/financial-account',
+  '/api/financialaccount',
   auth,
   validate(FinancialAccountValidation.createFinancialAccountSchema),
   FinancialAccountController.createFinancialAccount,

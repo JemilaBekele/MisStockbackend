@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
-const salaryPaymentService = require('../services');
+const { salaryPaymentService } = require('../services');
 
 // Create salary payment
 const createSalaryPayment = catchAsync(async (req, res) => {

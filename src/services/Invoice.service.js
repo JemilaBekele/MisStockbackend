@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const Invoice = require('../models'); // Adjust path as needed
+const { Invoice } = require('../models'); // Adjust path as needed
 const ApiError = require('../utils/ApiError');
 
 // Create Invoice

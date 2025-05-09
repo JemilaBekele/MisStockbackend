@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const Transaction = require('../models'); // Adjust path as needed
+const { Transaction } = require('../models'); // Adjust path as needed
 const ApiError = require('../utils/ApiError');
 
 // Create transaction

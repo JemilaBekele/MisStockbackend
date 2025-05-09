@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const RevenueCategory = require('../models'); // Adjust the path as needed
+const { RevenueCategory } = require('../models'); // Adjust the path as needed
 const ApiError = require('../utils/ApiError');
 
 // Create RevenueCategory

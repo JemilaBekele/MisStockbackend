@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
-const financialAccountService = require('../services');
+const { financialAccountService } = require('../services');
 
 // Create a new financial account
 const createFinancialAccount = catchAsync(async (req, res) => {
