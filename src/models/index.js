@@ -18,3 +18,11 @@ module.exports.InventoryLog = require('./Inventory/inventoryLog.model');
 module.exports.InventoryStock = require('./Inventory/inventoryStock.model');
 module.exports.PurchaseOrder = require('./Inventory/purchaseOrder.model');
 module.exports.InventoryRequest = require('./Inventory/inventoryrequest.model');
+
+// finace
+module.exports.Invoice = require('./finacial/Invoice.model');
+module.exports.FinancialAccount = require('./finacial/FinancialAccount.model');
+module.exports.RevenueCategory = require('./finacial/RevenueCategory.model');
+module.exports.SalaryPayment = require('./finacial/SalaryPayment.model');
+module.exports.Transaction = require('./finacial/Transaction.model');
+module.exports.ExpenseCategory = require('./finacial/ExpenseCategory.model');

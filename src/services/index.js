@@ -21,3 +21,11 @@ module.exports.inventoryLogService = require('./inventoryLog.service');
 module.exports.inventoryStockService = require('./inventoryStock.service');
 module.exports.purchaseOrderService = require('./purchaseOrder.service');
 module.exports.inventoryRequestService = require('./inventoryrequest.service');
+
+// finane
+module.exports.expenseCategoryService = require('./ExpenseCategory.service');
+module.exports.financialAccountService = require('./FinancialAccount.service');
+module.exports.invoiceService = require('./Invoice.service');
+module.exports.revenueCategoryService = require('./RevenueCategory.service');
+module.exports.salaryPaymentService = require('./SalaryPayment.service');
+module.exports.transactionService = require('./Transaction.service');

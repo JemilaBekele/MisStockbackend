@@ -19,3 +19,11 @@ module.exports.inventoryLogValidation = require('./inventoryLog.validation');
 module.exports.inventoryStockValidation = require('./inventoryStock.validation');
 module.exports.purchaseOrderValidation = require('./purchaseOrder.validation');
 module.exports.inventoryRequestValidation = require('./inventoryrequest.validation');
+
+// finance
+module.exports.FinancialAccountValidation = require('./financialAccount.validation');
+module.exports.ExpenseCategoryValidation = require('./expenseCategory.validation');
+module.exports.revenueCategoryValidation = require('./revenueCategory.validation');
+module.exports.salaryPaymentValidation = require('./salaryPayment.validation');
+module.exports.transactionValidation = require('./transaction.validation');
+module.exports.InvoiceValidation = require('./invoice.validation');

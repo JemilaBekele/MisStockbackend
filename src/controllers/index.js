@@ -18,3 +18,11 @@ module.exports.inventoryLogController = require('./inventoryLog.controller');
 module.exports.inventoryStockController = require('./inventoryStock.controller');
 module.exports.purchaseOrderController = require('./purchaseOrder.controller');
 module.exports.inventoryRequestController = require('./inventoryrequuest.controller');
+
+// finance
+module.exports.FinancialAccountController = require('./financialAccount.controller');
+module.exports.ExpenseCategoryController = require('./expenseCategory.controller');
+module.exports.revenueCategoryController = require('./revenueCategory.controller');
+module.exports.salaryPaymentController = require('./salaryPayment.controller');
+module.exports.transactionController = require('./transaction.controller');
+module.exports.InvoiceController = require('./invoice.controller');

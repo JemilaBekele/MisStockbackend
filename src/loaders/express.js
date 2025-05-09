@@ -22,6 +22,13 @@ const InventoryStockRouter = require('../routes/inventoryStock.route');
 const PurchaseOrderRouter = require('../routes/purchaseOrder.route');
 const InventoryRequestRouter = require('../routes/inventoryrequest.route');
 
+const expenseCategoryRouter = require('../routes/expenseCategory.routes');
+const revenueCategoryRouter = require('../routes/revenueCategory.route');
+const salaryPaymentRouter = require('../routes/salaryPayment.route');
+const transactionRouter = require('../routes/transactionControlle.route');
+const invoiceRouter = require('../routes/invoice.routes');
+const financeRouter = require('../routes/financialAccount.routes');
+
 const commentRouter = require('../routes/comment.route');
 const { errorHandler, errorConverter } = require('../middlewares/error');
 const ApiError = require('../utils/ApiError');
@@ -68,6 +75,14 @@ module.exports = async (app) => {
   app.use(InventoryStockRouter);
   app.use(PurchaseOrderRouter);
   app.use(InventoryRequestRouter);
+
+  // finance
+  app.use(expenseCategoryRouter);
+  app.use(revenueCategoryRouter);
+  app.use(salaryPaymentRouter);
+  app.use(transactionRouter);
+  app.use(invoiceRouter);
+  app.use(financeRouter);
   // path not found 404
   app.use((req, res, next) => {
     next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
