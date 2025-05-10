@@ -60,7 +60,7 @@ const transactionSchema = new mongoose.Schema(
     },
     receivedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee',
+      ref: 'User',
     },
     linkedTo: {
       leaseId: {

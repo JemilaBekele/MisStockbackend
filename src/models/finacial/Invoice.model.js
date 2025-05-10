@@ -5,7 +5,7 @@ const invoiceSchema = new mongoose.Schema(
   {
     issuedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      refPath: 'issuedToModel', // Can be Tenant or Buyer
+      refPath: 'User', // Can be Tenant or Buyer
       required: true,
     },
     issuedToModel: {
@@ -15,7 +15,7 @@ const invoiceSchema = new mongoose.Schema(
     },
     issuedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee', // Or you can use 'System' as a string in the future
+      ref: 'User', // Or you can use 'System' as a string in the future
       required: true,
     },
     type: {

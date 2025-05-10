@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Create salarypayment
 router.post(
-  '/api/salarypayment',
+  '/api/salarypayment/payment',
   auth,
   validate(salaryPaymentValidation.createSalaryPaymentSchema),
   salaryPaymentController.createSalaryPayment,
@@ -16,7 +16,7 @@ router.post(
 
 // Get all salary payments
 router.get(
-  '/api/salarypayment',
+  '/api/salarypayments',
   auth,
   salaryPaymentController.getAllSalaryPayments,
 );

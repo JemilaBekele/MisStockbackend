@@ -3,7 +3,7 @@ const Joi = require('joi');
 // Create Salary Payment Validation
 const createSalaryPaymentSchema = {
   body: Joi.object().keys({
-    employeeId: Joi.string().optional(),
+    employeeId: Joi.string().hex().length(24).required(),
     amount: Joi.number().min(0).required(),
     month: Joi.string()
       .regex(/^\d{4}-\d{2}$/)
