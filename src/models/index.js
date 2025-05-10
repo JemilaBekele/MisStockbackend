@@ -26,3 +26,6 @@ module.exports.RevenueCategory = require('./finacial/RevenueCategory.model');
 module.exports.SalaryPayment = require('./finacial/SalaryPayment.model');
 module.exports.Transaction = require('./finacial/Transaction.model');
 module.exports.ExpenseCategory = require('./finacial/ExpenseCategory.model');
+
+// lease
+module.exports.Lease = require('./lease.model');

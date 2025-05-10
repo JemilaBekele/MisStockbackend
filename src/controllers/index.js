@@ -26,3 +26,6 @@ module.exports.revenueCategoryController = require('./revenueCategory.controller
 module.exports.salaryPaymentController = require('./salaryPayment.controller');
 module.exports.transactionController = require('./transaction.controller');
 module.exports.InvoiceController = require('./invoice.controller');
+
+// lease
+module.exports.leaseController = require('./lease.controller');

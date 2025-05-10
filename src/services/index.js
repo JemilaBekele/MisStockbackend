@@ -29,3 +29,6 @@ module.exports.invoiceService = require('./Invoice.service');
 module.exports.revenueCategoryService = require('./RevenueCategory.service');
 module.exports.salaryPaymentService = require('./SalaryPayment.service');
 module.exports.transactionService = require('./Transaction.service');
+
+// lease
+module.exports.leaseService = require('./lease.service');

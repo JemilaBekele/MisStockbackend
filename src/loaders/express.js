@@ -29,6 +29,8 @@ const transactionRouter = require('../routes/transactionControlle.route');
 const invoiceRouter = require('../routes/invoice.routes');
 const financeRouter = require('../routes/financialAccount.routes');
 
+const leaseRouter = require('../routes/lease.route');
+
 const commentRouter = require('../routes/comment.route');
 const { errorHandler, errorConverter } = require('../middlewares/error');
 const ApiError = require('../utils/ApiError');
@@ -83,6 +85,8 @@ module.exports = async (app) => {
   app.use(transactionRouter);
   app.use(invoiceRouter);
   app.use(financeRouter);
+
+  app.use(leaseRouter);
   // path not found 404
   app.use((req, res, next) => {
     next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));

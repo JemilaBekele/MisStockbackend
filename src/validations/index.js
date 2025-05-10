@@ -27,3 +27,6 @@ module.exports.revenueCategoryValidation = require('./revenueCategory.validation
 module.exports.salaryPaymentValidation = require('./salaryPayment.validation');
 module.exports.transactionValidation = require('./transaction.validation');
 module.exports.InvoiceValidation = require('./invoice.validation');
+
+// lease
+module.exports.leaseValidation = require('./Lease.validation');
