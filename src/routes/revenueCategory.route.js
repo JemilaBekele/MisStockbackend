@@ -7,14 +7,14 @@ const auth = require('../middlewares/auth');
 const router = express.Router();
 
 router.post(
-  '/api/financial-account',
+  '/api/revenuecategory',
   auth,
   validate(revenueCategoryValidation.createRevenueCategorySchema),
   revenueCategoryController.createRevenueCategory,
 );
 // Get all revenue categories
 router.get(
-  '/api/revenuecategory',
+  '/api/revenuecategorys',
   auth,
   revenueCategoryController.getAllRevenueCategories,
 );
