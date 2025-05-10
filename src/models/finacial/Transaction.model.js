@@ -8,10 +8,25 @@ const transactionSchema = new mongoose.Schema(
       enum: ['Income', 'Expense', 'Transfer'],
       required: true,
     },
-    category: {
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: 'categoryModel',
+    },
+    categoryModel: {
       type: String,
-      required: true,
-      trim: true,
+      enum: ['ExpenseCategory', 'RevenueCategory'],
+      validate: {
+        validator(value) {
+          if (this.type === 'Income' && value !== 'RevenueCategory')
+            return false;
+          if (this.type === 'Expense' && value !== 'ExpenseCategory')
+            return false;
+          if (this.type === 'Transfer' && value != null) return false;
+          return true;
+        },
+        message: (props) =>
+          `Invalid categoryModel '${props.value}' for transaction type '${props.instance.type}'`,
+      },
     },
     subCategory: {
       type: String,
@@ -37,7 +52,7 @@ const transactionSchema = new mongoose.Schema(
     },
     paidBy: {
       type: mongoose.Schema.Types.ObjectId,
-      refPath: 'paidByModel', // Can be tenant or buyer
+      refPath: 'paidByModel', // Can be Tenant or Buyer
     },
     paidByModel: {
       type: String,

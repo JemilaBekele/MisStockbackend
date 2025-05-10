@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const { Transaction } = require('../models'); // Adjust path as needed
+const { Transaction } = require('../models');
 const ApiError = require('../utils/ApiError');
 
 // Create transaction
@@ -26,6 +26,14 @@ const getTransactionById = async (id) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
   }
 
+  // Populate categoryId based on categoryModel (refPath)
+  if (transaction.categoryId && transaction.categoryModel) {
+    await transaction.populate({
+      path: 'categoryId',
+      model: transaction.categoryModel,
+    });
+  }
+
   return transaction;
 };
 
@@ -33,6 +41,7 @@ const getTransactionById = async (id) => {
 const getAllTransactions = async () => {
   const transactions = await Transaction.find()
     .sort({ createdAt: -1 })
+    .populate({ path: 'categoryId', model: 'categoryModel' }) // this works per-document only during `findById`, so you might need manual handling here
     .populate('fromAccountId')
     .populate('toAccountId')
     .populate('paidBy')
@@ -50,6 +59,7 @@ const getTransactionsByAccount = async (accountId) => {
     $or: [{ fromAccountId: accountId }, { toAccountId: accountId }],
   })
     .sort({ date: -1 })
+    .populate({ path: 'categoryId', model: 'categoryModel' })
     .populate('paidBy')
     .populate('receivedBy');
 
@@ -60,6 +70,7 @@ const getTransactionsByAccount = async (accountId) => {
 const getTransactionsByStatus = async (status) => {
   const transactions = await Transaction.find({ status })
     .sort({ date: -1 })
+    .populate({ path: 'categoryId', model: 'categoryModel' })
     .populate('paidBy')
     .populate('receivedBy');
 
