@@ -4,8 +4,8 @@ const { objectId } = require('./custom.validation'); // Assume you have custom v
 // Create Lease Validation
 const createLeaseSchema = {
   body: Joi.object().keys({
-    unitId: Joi.string().custom(objectId).required(),
-    tenantId: Joi.string().custom(objectId).required(),
+    unitId: Joi.string().required(),
+    tenantId: Joi.string().required(),
     startDate: Joi.date().iso().required(),
     endDate: Joi.date().iso().greater(Joi.ref('startDate')).allow(null),
     rentAmount: Joi.number().positive().required(),
@@ -16,11 +16,7 @@ const createLeaseSchema = {
       .keys({
         amount: Joi.number().positive().required(),
         paid: Joi.boolean().default(false),
-        date: Joi.date().iso().when('paid', {
-          is: true,
-          then: Joi.required(),
-          otherwise: Joi.forbidden(),
-        }),
+        date: Joi.date(),
       })
       .required(),
     paymentSchedule: Joi.array()

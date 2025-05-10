@@ -106,9 +106,15 @@ const getLeaseById = async (id) => {
  * @param {number} [options.page] - Current page (default = 1)
  * @returns {Promise<QueryResult>}
  */
-const queryLeases = async (filter, options) => {
-  const leases = await Lease.paginate(filter, options);
-  return leases;
+const getLeases = async () => {
+  const leases = await Lease.find()
+    .sort({ createdAt: -1 })
+    .populate('unitId')
+    .populate('tenantId');
+  return {
+    leases,
+    count: leases.length,
+  };
 };
 
 /**
@@ -198,7 +204,7 @@ const deleteLease = async (leaseId) => {
 module.exports = {
   createLease,
   getLeaseById,
-  queryLeases,
+  getLeases,
   getActiveLeasesByProperty,
   updateLease,
   terminateLease,

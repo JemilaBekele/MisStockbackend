@@ -21,12 +21,7 @@ router.post(
 router.get('/api/lease/:id', auth, leaseController.getLease);
 
 // Get all leases with optional query filters
-router.get(
-  '/api/leases',
-  auth,
-  validate(leaseValidation.queryLeasesSchema),
-  leaseController.getLeases,
-);
+router.get('/api/leases', auth, leaseController.getLeases);
 
 // Update a lease
 router.put(

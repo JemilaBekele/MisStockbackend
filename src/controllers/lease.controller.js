@@ -33,21 +33,8 @@ const getLease = catchAsync(async (req, res) => {
  * Get paginated list of leases
  */
 const getLeases = catchAsync(async (req, res) => {
-  const filter = { ...req.query };
-  // Remove special query params
-  ['page', 'limit', 'sortBy'].forEach((param) => delete filter[param]);
-
-  const options = {
-    page: parseInt(req.query.page, 10) || 1,
-    limit: parseInt(req.query.limit, 10) || 10,
-    sortBy: req.query.sortBy || 'startDate:desc',
-  };
-
-  const result = await leaseService.queryLeases(filter, options);
-  res.status(httpStatus.OK).send({
-    success: true,
-    data: result,
-  });
+  const leases = await leaseService.getLeases();
+  res.status(httpStatus.OK).json(leases);
 });
 
 /**
