@@ -1,114 +1,358 @@
 const bcrypt = require('bcryptjs');
+const { Status } = require('@prisma/client');
 const httpStatus = require('http-status');
-const { User } = require('../models');
+const prisma = require('./prisma');
 const ApiError = require('../utils/ApiError');
-const EventEmitter = require('../utils/EventEmitter');
 
-const createUser = async (userBody) => {
-  // Check if email exists
-  if (await User.isEmailTaken(userBody.email)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Email is already taken');
+const isEmailTaken = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  return !!user;
+};
+
+const generateUserCode = async (prefix = 'U') => {
+  const latestUser = await prisma.user.findFirst({
+    orderBy: { createdAt: 'desc' },
+    select: { userCode: true },
+  });
+
+  let nextNumber = 1;
+  if (latestUser?.userCode) {
+    const matches = latestUser.userCode.match(/\d+$/);
+    if (matches) {
+      nextNumber = parseInt(matches[0], 10) + 1;
+    }
   }
-  const user = await User.create(userBody);
-  // Send Email
-  EventEmitter.emit('signup', user);
+  return `${prefix}-${nextNumber.toString().padStart(4, '0')}`;
+};
+
+const createUser = async (userData) => {
+  const {
+    email,
+    password,
+    name,
+    phone,
+    roleId,
+    branchId,
+    shopIds = [], // ✅ accept shop ids
+    storeIds = [], // ✅ accept store ids
+    status = Status.Active,
+    ...rest
+  } = userData;
+
+  // Email check
+  if (await isEmailTaken(email)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+  }
+
+  // Generate user code
+  const userCode = await generateUserCode();
+
+  // Password hashing
+  const hashedPassword = await bcrypt.hash(password, 8);
+
+  // Prepare user data
+  const userCreateData = {
+    email,
+    password: hashedPassword,
+    name,
+    phone,
+    status,
+    userCode,
+    ...rest,
+    role: { connect: { id: roleId } },
+  };
+
+  // Add branch connection if provided
+  if (branchId) {
+    userCreateData.branch = { connect: { id: branchId } };
+  }
+
+  // ✅ Add shop relations if provided
+  if (shopIds.length > 0) {
+    userCreateData.shops = {
+      connect: shopIds.map((id) => ({ id })),
+    };
+  }
+
+  // ✅ Add store relations if provided
+  if (storeIds.length > 0) {
+    userCreateData.stores = {
+      connect: storeIds.map((id) => ({ id })),
+    };
+  }
+
+  // Create user
+  const user = await prisma.user.create({
+    data: userCreateData,
+    include: {
+      role: true,
+      branch: true,
+      shops: true, // ✅ return assigned shops
+      stores: true, // ✅ return assigned stores
+    },
+  });
+
+  return user;
+};
+
+const getUsers = async ({ startDate, endDate } = {}) => {
+  const whereClause = {};
+  // Convert string dates to Date objects if they exist
+  const startDateObj = startDate ? new Date(startDate) : undefined;
+  const endDateObj = endDate ? new Date(endDate) : undefined;
+
+  // Build the date filter
+  if (startDateObj && endDateObj) {
+    whereClause.createdAt = {
+      gte: startDateObj,
+      lte: endDateObj,
+    };
+  } else if (startDateObj) {
+    whereClause.createdAt = {
+      gte: startDateObj,
+    };
+  } else if (endDateObj) {
+    whereClause.createdAt = {
+      lte: endDateObj,
+    };
+  }
+
+  // Get total count (with date filters applied)
+  const totalUsers = await prisma.user.count({
+    where: whereClause,
+  });
+
+  // Get users (with date filters applied)
+  const users = await prisma.user.findMany({
+    where: whereClause,
+    include: {
+      role: true, // <-- This includes the related role data
+    },
+  });
+
+  return {
+    success: true,
+    time: new Date().toISOString(),
+    message: 'Users retrieved successfully',
+    count: totalUsers,
+    users,
+  };
+};
+const getUserById = async (id) => {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: {
+      role: true,
+      branch: true,
+      shops: true, // Include all shops assigned to the user
+      stores: true, // Include all stores assigned to the user
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
   return user;
 };
 
 const getUserByEmail = async (email) => {
-  const user = await User.findOne({ email });
-  return user;
-};
-
-const getUserById = async (id) => {
-  const user = await User.findById(id);
-  return user;
-};
-// Get all users
-const getAllUsers = async () => {
-  const users = await User.find({
-    role: {
-      $in: ['Resident', 'ShopOwner', 'Maintenance', 'Accountant', 'Admin'],
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      role: true,
     },
   });
-  return {
-    users,
-    count: users.length,
-  };
-};
 
-const getUsersByRoles = async () => {
-  const users = await User.find({ role: { $in: ['Owner', 'Renter', 'None'] } });
-  return {
-    users,
-    count: users.length,
-  };
+  // Return null instead of throwing error when not found
+  return user;
 };
-const getFalseconfirm = async () => {
-  const users = await User.find({ confirm: false });
-  return {
-    users,
-    count: users.length,
-  };
-};
+const updateUserById = async (userId, updateBody) => {
+  const user = await getUserById(userId);
 
-// Update user details (except password)
-const updateUser = async (id, updateBody) => {
-  const user = await getUserById(id);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
-
-  // If email is being updated, check if it's already taken
-  if (updateBody.email && updateBody.email !== user.email) {
-    if (await User.isEmailTaken(updateBody.email)) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Email is already taken');
+  // Check if email is being updated and if it's already taken
+  if (updateBody.email && user.email !== updateBody.email) {
+    if (await isEmailTaken(updateBody.email)) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
     }
   }
 
-  // Update user details
-  Object.assign(user, updateBody);
-  await user.save();
+  const { roleId, branchId, shopIds, storeIds, ...rest } = updateBody;
+
+  const updateData = {
+    ...rest,
+    ...(updateBody.password && {
+      password: await bcrypt.hash(updateBody.password, 8),
+    }),
+  };
+
+  // Handle role update if provided
+  if (roleId) {
+    updateData.role = { connect: { id: roleId } };
+  }
+
+  // Handle branch update if provided
+  if (branchId) {
+    updateData.branch = { connect: { id: branchId } };
+  }
+
+  // ✅ Handle shop update if provided
+  if (Array.isArray(shopIds)) {
+    updateData.shops = {
+      set: [], // clear existing shops
+      connect: shopIds.map((id) => ({ id })), // add new ones
+    };
+  }
+
+  // ✅ Handle store update if provided
+  if (Array.isArray(storeIds)) {
+    updateData.stores = {
+      set: [], // clear existing stores
+      connect: storeIds.map((id) => ({ id })), // add new ones
+    };
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    include: {
+      role: true,
+      branch: true,
+      shops: true, // ✅ return updated shops
+      stores: true, // ✅ return updated stores
+    },
+  });
+
+  return updatedUser;
+};
+
+const deleteUserById = async (userId) => {
+  const user = await getUserById(userId);
+
+  await prisma.user.delete({ where: { id: userId } });
+
   return user;
 };
 
-// Change user password
-const changePassword = async (id, oldPassword, newPassword) => {
-  const user = await getUserById(id);
+const changeUserStatus = async (userId, status) => {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: { status },
+    include: {
+      role: true,
+      branch: true,
+    },
+  });
+
+  return user;
+};
+
+const isPasswordMatch = async (user, password) => {
+  // Assuming user object has a 'password' field which is the hashed password
+  // And you are using bcrypt for password hashing
+  if (!user || !user.password) {
+    return false; // Cannot match if user or password hash is missing
+  }
+  return bcrypt.compare(password, user.password);
+};
+// In your controller
+
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await getUserById(userId);
+
+  const isCurrentPasswordValid = await isPasswordMatch(user, currentPassword);
+  if (!isCurrentPasswordValid) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Current password is incorrect');
+  }
+
+  const isSamePassword = await isPasswordMatch(user, newPassword);
+  if (isSamePassword) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'New password must be different from current password',
+    );
+  }
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 8);
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedNewPassword },
+    include: {
+      role: true,
+      branch: true,
+    },
+  });
+
+  return updatedUser;
+};
+const resetPassword = async (userId, resetBody) => {
+  const { newPassword } = resetBody;
+
+  if (newPassword.length < 6) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Password must be at least 6 characters long',
+    );
+  }
+
+  // Get user
+  const user = await getUserById(userId);
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  // Verify old password
-  const isMatch = await user.isPasswordMatch(oldPassword);
-  if (!isMatch) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Old password is incorrect');
+  // Check if new password is same as current password (optional security check)
+  const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+  if (isSameAsCurrent) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'New password cannot be the same as current password',
+    );
   }
 
-  // Update password with bcrypt hash
-  user.password = await bcrypt.hash(newPassword, 8);
-  await user.save();
-  return user;
-};
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 8);
 
-// Delete user
-const deleteUser = async (id) => {
-  const user = await getUserById(id);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  await user.remove();
-  return { message: 'User deleted successfully' };
-};
+  // Update password
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      password: hashedPassword,
+      updatedAt: new Date(),
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      branch: true,
+      shops: true,
+      stores: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
 
+  // Create log entry
+  await prisma.log.create({
+    data: {
+      action: `Password reset for user ${user.email}`,
+      userId,
+    },
+  });
+
+  return updatedUser;
+};
 module.exports = {
   createUser,
-  getUserByEmail,
+  getUsers,
   getUserById,
-  updateUser,
+  getUserByEmail,
+  updateUserById,
+  deleteUserById,
+  changeUserStatus,
+  isPasswordMatch,
   changePassword,
-  getAllUsers,
-  deleteUser,
-  getUsersByRoles,
-  getFalseconfirm,
+  resetPassword,
 };

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { envValidation } = require('../validations');
 
+// Add DATABASE_URL to your Joi validation schema
 const { value: envVars, error } = envValidation.validate(process.env);
 const logger = require('./logger');
 
@@ -10,7 +11,9 @@ if (error) {
 
 module.exports = {
   port: envVars.PORT,
-  dbConnection: envVars.DB_CONNECTION,
+  db: {
+    url: envVars.DATABASE_URL, // Changed from DB_CONNECTION to DATABASE_URL
+  },
   env: envVars.NODE_ENV,
   email: envVars.EMAIL,
   emailPassword: envVars.EMAIL_PASSWORD,

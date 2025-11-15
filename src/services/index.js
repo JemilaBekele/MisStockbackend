@@ -1,34 +1,29 @@
-module.exports.blogService = require('./blog.service');
-module.exports.commentService = require('./comment.service');
-
 module.exports.userService = require('./user.service');
 module.exports.tokenService = require('./token.service');
-module.exports.tokententantService = require('./tentanttocken.service');
+module.exports.roleService = require('./Role.service');
+module.exports.permissionService = require('./permission.service');
+module.exports.rolePermissionService = require('./rolePermission.service');
 
+module.exports.categoryService = require('./Category.service');
 module.exports.authService = require('./auth.service');
-module.exports.tenantService = require('./tenant.service');
+module.exports.companyService = require('./company.service');
+module.exports.branchService = require('./Branch.service');
+module.exports.customerService = require('./Customer.service');
+module.exports.shopService = require('./Shop.service');
+module.exports.storeService = require('./Store.service');
 
-module.exports.areaService = require('./area.service');
-module.exports.spaceService = require('./space.service');
-module.exports.unitService = require('./unit.service');
-module.exports.fearureService = require('./fearure.service');
+module.exports.unitOfMeasureService = require('./UnitOfMeasure.service');
+module.exports.productService = require('./Product.service');
+module.exports.purchaseService = require('./purchase.service');
+module.exports.productBatchService = require('./ProductBatch.service');
+module.exports.transferService = require('./transfer.service');
+module.exports.stockCorrectionService = require('./StockCorrection.service');
+module.exports.sellService = require('./Sell.service');
+module.exports.sellStockCorrectionService = require('./SellStockCorrect.service');
+module.exports.ReportService = require('./Report.service');
+module.exports.InventoryDashboardService = require('./inventorydashboard.service');
+module.exports.GeneralDashboardService = require('./GeneralDashboard.service');
+module.exports.cartService = require('./Cart.service');
 
-// inventory
-module.exports.inventoryCategoryService = require('./inventoryCategory.service');
-module.exports.inventoryItemService = require('./InventoryItem.service');
-module.exports.inventoryLocationService = require('./inventoryLocation.service');
-module.exports.inventoryLogService = require('./inventoryLog.service');
-module.exports.inventoryStockService = require('./inventoryStock.service');
-module.exports.purchaseOrderService = require('./purchaseOrder.service');
-module.exports.inventoryRequestService = require('./inventoryrequest.service');
-
-// finane
-module.exports.expenseCategoryService = require('./ExpenseCategory.service');
-module.exports.financialAccountService = require('./FinancialAccount.service');
-module.exports.invoiceService = require('./Invoice.service');
-module.exports.revenueCategoryService = require('./RevenueCategory.service');
-module.exports.salaryPaymentService = require('./SalaryPayment.service');
-module.exports.transactionService = require('./Transaction.service');
-
-// lease
-module.exports.leaseService = require('./lease.service');
+module.exports.yearEndResetService = require('./yearEndReset.service');
+module.exports.factoryResetService = require('./factoryReset.service');

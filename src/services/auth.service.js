@@ -1,32 +1,36 @@
+// src/services/auth.service.js
+
 const httpStatus = require('http-status');
-const { RateLimiterMongo } = require('rate-limiter-flexible');
-const mongoose = require('mongoose');
+const { RateLimiterMemory } = require('rate-limiter-flexible'); // Keep if rate limiting is used
 const userService = require('./user.service');
-const tokenService = require('./token.service');
+const tokenService = require('./token.service'); // Ensure this is the refactored stateless version
 const ApiError = require('../utils/ApiError');
 const { tokenTypes } = require('../config/tokens');
 const config = require('../config/config');
+const prisma = require('./prisma'); // Keep if rate limiting is used
+// const prisma = require('./prisma'); // REMOVED - Prisma is not used directly for tokens here anymore
 
+// Using RateLimiterMemory instead of RateLimiterMongo since Prisma handles DB access
+// For production, consider Redis-based rate limiter
 const login = async (email, password, ipAddr) => {
+  // Rate limiting logic
   const rateLimiterOptions = {
-    storeClient: mongoose.connection,
-    dbName: mongoose.connection.name,
     blockDuration: 60 * 60 * 24, // Block for 1 day
   };
 
-  const emailIpBruteLimiter = new RateLimiterMongo({
+  const emailIpBruteLimiter = new RateLimiterMemory({
     ...rateLimiterOptions,
     points: config.rateLimiter.maxAttemptsByIpUsername,
     duration: 60 * 10, // 10 minutes
   });
 
-  const slowerBruteLimiter = new RateLimiterMongo({
+  const slowerBruteLimiter = new RateLimiterMemory({
     ...rateLimiterOptions,
     points: config.rateLimiter.maxAttemptsPerDay,
     duration: 60 * 60 * 24,
   });
 
-  const emailBruteLimiter = new RateLimiterMongo({
+  const emailBruteLimiter = new RateLimiterMemory({
     ...rateLimiterOptions,
     points: config.rateLimiter.maxAttemptsPerEmail,
     duration: 60 * 60 * 24,
@@ -34,95 +38,113 @@ const login = async (email, password, ipAddr) => {
 
   const promises = [slowerBruteLimiter.consume(ipAddr)];
 
-  const user = await userService.getUserByEmail(email);
-  if (!user || !(await user.isPasswordMatch(password))) {
-    // eslint-disable-next-line no-unused-expressions
-    user &&
+  // Find user with role, permissions, and branch
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      role: {
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      },
+      branch: true, // Include branch information
+      shops: true, // Include assigned shops
+      stores: true, // Include assigned stores
+    },
+  });
+
+  // Check if user exists and password matches
+  if (!user || !(await userService.isPasswordMatch(user, password))) {
+    if (user) {
+      // Only consume email/ip limiters if a user with the email exists
       promises.push(
         emailIpBruteLimiter.consume(`${email}_${ipAddr}`),
         emailBruteLimiter.consume(email),
       );
+    }
+    // Wait for all rate limiter promises to resolve before throwing error
     await Promise.all(promises);
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
-  if (!user.confirm) {
+
+  // Check if user is active
+  if (user.status !== 'Active') {
     throw new ApiError(
       httpStatus.FORBIDDEN,
-      'Your account is not confirmed yet',
+      'Your account is not active. Please contact administrator.',
     );
   }
-  return user;
+
+  // Format the user object with permission names only and branch info
+  const formattedUser = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    roleType: user.roleType,
+    role: user.role?.name,
+    lastLoginAt: user.lastLoginAt,
+    status: user.status,
+    phone: user.phone,
+    // Include branch information if exists
+    // branch: user.branch.name,
+    // branchId: user.branchId,
+    // Include assigned shops and stores
+    shops: user.shops,
+    stores: user.stores,
+    // Include permissions
+  };
+
+  // Update last login time
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date() },
+  });
+
+  return formattedUser;
 };
 
-// const login = async (email, password, ipAddr) => {
-//   const rateLimiterOptioins = {
-//     storeClient: mongoose.connection,
-//     dbName: 'blog_app',
-//     blockDuration: 60 * 60 * 24,
-//   };
-
-//   const emailIpBruteLimiter = new RateLimiterMongo({
-//     ...rateLimiterOptioins,
-//     points: config.rateLimiter.maxAttemptsByIpUsername,
-//     duration: 60 * 10,
-//   });
-
-//   const slowerBruteLimiter = new RateLimiterMongo({
-//     ...rateLimiterOptioins,
-//     points: config.rateLimiter.maxAttemptsPerDay,
-//     duration: 60 * 60 * 24,
-//   });
-
-//   const emailBruteLimiter = new RateLimiterMongo({
-//     ...rateLimiterOptioins,
-//     points: config.rateLimiter.maxAttemptsPerEmail,
-//     duration: 60 * 60 * 24,
-//   });
-
-//   const promises = [slowerBruteLimiter.consume(ipAddr)];
-//   const user = await userService.getUserByEmail(email);
-
-//   if (!user || !(await user.isPasswordMatch(password))) {
-//     // Incorrect email or password
-//     // eslint-disable-next-line no-unused-expressions
-//     user &&
-//       promises.push([
-//         emailIpBruteLimiter.consume(`${email}_${ipAddr}`),
-//         emailBruteLimiter.consume(email),
-//       ]);
-//     await Promise.all(promises);
-//     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
-//   }
-
-//   // Check if user is confirmed
-//   if (!user.confirm) {
-//     throw new ApiError(
-//       httpStatus.FORBIDDEN,
-//       'Your account is not confirmed yet',
-//     );
-//   }
-
-//   return user;
-// };
-
+/**
+ * Refresh auth tokens
+ * Requires a valid refresh token. Generates a new access and refresh token pair.
+ * The old refresh token is NOT invalidated server-side in this stateless approach.
+ * @param {string} refreshToken
+ * @returns {Promise<Object>} // Returns new access and refresh tokens
+ */
 const refreshAuthToken = async (refreshToken) => {
   try {
-    const refreshTokenDoc = await tokenService.verifyToken(
+    // 1. Verify the refresh token using the stateless verify function
+    // verifyToken now returns the payload if valid
+    const refreshTokenPayload = await tokenService.verifyToken(
       refreshToken,
       tokenTypes.REFRESH,
     );
-    const user = await userService.getUserById(refreshTokenDoc.user);
+
+    // 2. Get the user from the payload
+    const user = await userService.getUserById(refreshTokenPayload.sub); // payload.sub is the userId
     if (!user) {
-      throw new Error();
+      // This case indicates a refresh token for a non-existent user
+      throw new Error('User not found for refresh token'); // More descriptive error
     }
-    await refreshTokenDoc.remove();
-    return tokenService.generateAuthTokens(user.id);
+
+    // 3. Generate a new pair of tokens
+    // The old refresh token remains valid until its expiry.
+    const newTokens = await tokenService.generateAuthTokens(user.id);
+
+    // REMOVED: Deleting the old refresh token from the database
+
+    return newTokens;
   } catch (error) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+    // Catch any errors from jwt.verify, user lookup, or token generation
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate'); // Send a generic error to the client
   }
 };
 
 module.exports = {
   login,
   refreshAuthToken,
+  // ... add other exported functions like logout, sendEmailVerificationToken, etc.
 };

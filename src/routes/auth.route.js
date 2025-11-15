@@ -1,53 +1,80 @@
 const express = require('express');
 
 const router = express.Router();
-const validate = require('../middlewares/validate');
-const { userValidation, authValidation } = require('../validations');
+// const validate = require('../middlewares/validate');
+// const { userValidation } = require('../validations');
 const { authController } = require('../controllers');
-const { authLimiter } = require('../middlewares/authLimiter');
 const auth = require('../middlewares/auth');
+// const checkPermission = require('../middlewares/permission.middleware');
 
-// Authentication routes
+// User management routes
 router.post(
   '/api/register',
-  validate(userValidation.createUserSchema),
-  authController.register,
-);
-
-router.post(
-  '/api/login',
-  authLimiter,
-  validate(authValidation.loginSchema),
-  authController.login,
-);
-
-router.post(
-  '/api/refresh-token',
-  validate(authValidation.refreshTokenSchema),
-  authController.refreshToken,
-);
-
-router.get('/api/user', auth, authController.getAllUsers); // ✅ Get all users
-router.get('/api/user/confirmfalse', auth, authController.getFalseconfirm); // ✅ Get all users
-
-router.get('/api/user/roletentant', auth, authController.getUsersByRoles); // ✅ Get all users
-router.get('/api/user/:userId', auth, authController.getUserById);
-// User management routes
-router.put(
-  '/api/user/:userId',
   auth,
+  // checkPermission('CREATE_USER'),
+  // validate(userValidation.createUserSchema),
+  authController.createUser,
+);
 
-  validate(userValidation.updateUserSchema), // Assuming validation for update is defined
+router.get(
+  '/api/users',
+  auth,
+  // validate(userValidation.getUsersSchema),
+  authController.getUsers,
+);
+
+router.get(
+  '/api/users/:userId',
+  auth,
+  // validate(userValidation.getUserSchema),
+  authController.getUser,
+);
+router.get(
+  '/api/users/Usermy/data',
+  auth,
+  // validate(userValidation.getUserSchema),
+  authController.getUsermy,
+);
+
+router.put(
+  '/api/users/:userId',
+  auth,
+  // checkPermission('UPDATE_USER'),
+  // validate(userValidation.updateUserSchema),
   authController.updateUser,
 );
-
-router.put(
-  '/api/user/:userId/change-password',
+router.patch(
+  '/api/users/change-password',
   auth,
-  validate(userValidation.changePasswordSchema), // Assuming validation for password change is defined
-  authController.changePassword,
+  authController.changeUserPassword,
+);
+router.delete(
+  '/api/users/:userId',
+  auth,
+  // checkPermission('DELETE_USER'),
+  authController.deleteUser,
 );
 
-router.delete('/api/user/:userId', auth, authController.deleteUser);
+router.put(
+  '/api/users/:userId/status',
+  auth,
+  // checkPermission('UPDATE_USER_STATUS'),
+  // validate(userValidation.changeStatusSchema),
+  authController.changeUserStatus,
+);
 
+router.get(
+  '/api/users/email',
+  auth,
+  // validate(userValidation.getUserByEmailSchema),
+  authController.getUserByEmail,
+);
+
+// Authentication route
+router.post(
+  '/api/login',
+  // validate(userValidation.loginSchema),
+  authController.login,
+);
+router.put('/api/user/reset-password', auth, authController.resetPassword);
 module.exports = router;

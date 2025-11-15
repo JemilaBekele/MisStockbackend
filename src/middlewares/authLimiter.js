@@ -1,36 +1,51 @@
-const { RateLimiterMongo } = require('rate-limiter-flexible');
-const mongoose = require('mongoose');
-const httpStatus = require('http-status');
+// src/middlewares/authLimiter.js
 
+// 1. Change the import from RateLimiterMongo to RateLimiterMemory
+// REMOVE: const { RateLimiterMongo } = require('rate-limiter-flexible');
+const { RateLimiterMemory } = require('rate-limiter-flexible'); // ADD this line
+
+const httpStatus = require('http-status');
 const config = require('../config/config');
 const ApiError = require('../utils/ApiError');
 
-const rateLimiterOptioins = {
-  storeClient: mongoose.connection,
-  dbName: 'blog_app',
-  blockDuration: 60 * 60 * 24,
-};
-const emailIpBruteLimiter = new RateLimiterMongo({
-  ...rateLimiterOptioins,
+// 2. REMOVE the MongoDB-specific options object (dbName is only for Mongo)
+// REMOVE:
+// const rateLimiterOptioins = {
+//   dbName: 'blog_app',
+//   blockDuration: 60 * 60 * 24, // blockDuration might not apply to all stores like memory
+// };
+
+// 3. Create instances using RateLimiterMemory and remove MongoDB-specific options
+
+// Change from new RateLimiterMongo(...) to new RateLimiterMemory(...)
+const emailIpBruteLimiter = new RateLimiterMemory({
+  // REMOVE ...rateLimiterOptioins spread
   points: config.rateLimiter.maxAttemptsByIpUsername,
-  duration: 60 * 10,
+  duration: 60 * 10, // Use duration directly
+  // REMOVE any mongo: or storeClient: options if they were implicitly added
 });
 
-const slowerBruteLimiter = new RateLimiterMongo({
-  ...rateLimiterOptioins,
+// Change from new RateLimiterMongo(...) to new RateLimiterMemory(...)
+const slowerBruteLimiter = new RateLimiterMemory({
+  // REMOVE ...rateLimiterOptioins spread
   points: config.rateLimiter.maxAttemptsPerDay,
-  duration: 60 * 60 * 24,
+  duration: 60 * 60 * 24, // Use duration directly
+  // REMOVE any mongo: or storeClient: options
 });
 
-const emailBruteLimiter = new RateLimiterMongo({
-  ...rateLimiterOptioins,
+// Change from new RateLimiterMongo(...) to new RateLimiterMemory(...)
+const emailBruteLimiter = new RateLimiterMemory({
+  // REMOVE ...rateLimiterOptioins spread
   points: config.rateLimiter.maxAttemptsPerEmail,
-  duration: 60 * 60 * 24,
+  duration: 60 * 60 * 24, // Use duration directly
+  // REMOVE any mongo: or storeClient: options
 });
 
+// The core logic using .get() remains the same, as .get() exists on RateLimiterMemory
 const authLimiter = async (req, res, next) => {
   const ipAddr = req.connection.remoteAddress;
   const emailIpKey = `${req.body.email}_${ipAddr}`;
+
   const [slowerBruteRes, emailIpRes, emailBruteRes] = await Promise.all([
     slowerBruteLimiter.get(ipAddr),
     emailIpBruteLimiter.get(emailIpKey),
@@ -64,7 +79,10 @@ const authLimiter = async (req, res, next) => {
 };
 
 module.exports = {
-  emailIpBruteLimiter,
-  slowerBruteLimiter,
+  // You likely only need to export authLimiter if it's used as middleware
+  // Exporting the limiter instances themselves isn't typical unless accessed elsewhere
+  // Consider removing these two lines if they are not used outside this file:
+  // emailIpBruteLimiter,
+  // slowerBruteLimiter,
   authLimiter,
 };

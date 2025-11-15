@@ -1,0 +1,271 @@
+/* eslint-disable no-restricted-syntax */
+const httpStatus = require('http-status');
+const catchAsync = require('../utils/catchAsync');
+const { productService } = require('../services');
+const ApiError = require('../utils/ApiError');
+
+// Create Product
+const createProduct = catchAsync(async (req, res) => {
+  // Structure files by field name
+  const structuredFiles = {};
+
+  if (Array.isArray(req.files)) {
+    req.files.forEach((file) => {
+      if (!structuredFiles[file.fieldname]) {
+        structuredFiles[file.fieldname] = [];
+      }
+      structuredFiles[file.fieldname].push(file);
+    });
+  } else if (req.files) {
+    for (const [fieldname, files] of Object.entries(req.files)) {
+      structuredFiles[fieldname] = Array.isArray(files) ? files : [files];
+    }
+  }
+
+  // Ensure image field exists even if no file was uploaded
+  structuredFiles.image = structuredFiles.image || undefined;
+
+  const product = await productService.createProduct(req.body, structuredFiles);
+
+  res.status(httpStatus.CREATED).send({
+    success: true,
+    message: 'Product created successfully',
+    product,
+  });
+});
+const createProductBatch = catchAsync(async (req, res) => {
+  const { productId } = req.params;
+  const batchData = req.body;
+  const userId = req.user.id; // Assuming user is attached to request during authentication
+
+  const productBatch = await productService.createProductBatch(
+    productId,
+    batchData,
+    userId,
+  );
+
+  res.status(httpStatus.CREATED).send({
+    success: true,
+    message: 'Product batch created successfully',
+    productBatch,
+  });
+});
+// Update Product
+const updateProduct = catchAsync(async (req, res) => {
+  // Structure files by field name
+  const structuredFiles = {};
+
+  if (Array.isArray(req.files)) {
+    req.files.forEach((file) => {
+      if (!structuredFiles[file.fieldname]) {
+        structuredFiles[file.fieldname] = [];
+      }
+      structuredFiles[file.fieldname].push(file);
+    });
+  } else if (req.files) {
+    for (const [fieldname, files] of Object.entries(req.files)) {
+      structuredFiles[fieldname] = Array.isArray(files) ? files : [files];
+    }
+  }
+
+  // Ensure image field exists even if no file was uploaded
+  structuredFiles.image = structuredFiles.image || undefined;
+
+  const product = await productService.updateProduct(
+    req.params.id,
+    req.body,
+    structuredFiles,
+  );
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: 'Product updated successfully',
+    product,
+  });
+});
+// Get Product by ID
+const getProduct = catchAsync(async (req, res) => {
+  const product = await productService.getProductById(req.params.id);
+  if (!product) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
+  }
+  res.status(httpStatus.OK).send({
+    success: true,
+    product,
+  });
+});
+
+const getBatchesByProduct = catchAsync(async (req, res) => {
+  const { productId } = req.params;
+  const result = await productService.getBatchesByProduct(productId);
+  res.status(httpStatus.OK).send({
+    success: true,
+    ...result,
+  });
+});
+// Get Product by Code
+const getProductByCode = catchAsync(async (req, res) => {
+  const product = await productService.getProductByCode(req.params.code);
+  if (!product) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
+  }
+  res.status(httpStatus.OK).send({
+    success: true,
+    product,
+  });
+});
+
+// Get all Products
+const getActiveAllProducts = catchAsync(async (req, res) => {
+  const result = await productService.getActiveAllProducts();
+  res.status(httpStatus.OK).send({
+    success: true,
+    ...result,
+  });
+});
+
+const getProducts = catchAsync(async (req, res) => {
+  const filter = {
+    categoryId: req.query.categoryId,
+    subCategoryId: req.query.subCategoryId,
+    search: req.query.search,
+  };
+
+  const result = await productService.getAllProducts(filter);
+  res.status(httpStatus.OK).send({
+    success: true,
+    ...result,
+  });
+});
+const getTopSellingProducts = catchAsync(async (req, res) => {
+  console.log('req.query', req.query);
+  const { searchTerm, categoryId, subCategoryId } = req.query;
+  const userId = req.user.id;
+
+  // Convert empty strings to null and ensure proper parameter assignment
+  const processedSearchTerm =
+    searchTerm && searchTerm.trim() !== '' ? searchTerm.trim() : null;
+  const processedCategoryId =
+    categoryId && categoryId.trim() !== '' ? categoryId.trim() : null;
+  const processedSubCategoryId =
+    subCategoryId && subCategoryId.trim() !== '' ? subCategoryId.trim() : null;
+
+  console.log('🎯 Processed parameters:', {
+    searchTerm: processedSearchTerm,
+    categoryId: processedCategoryId,
+    subCategoryId: processedSubCategoryId,
+  });
+
+  // DEBUG: Check if parameters are being mixed up
+  if (processedSearchTerm && isValidUUID(processedSearchTerm)) {
+    console.warn(
+      '⚠️ WARNING: searchTerm looks like a UUID, might be parameter mixup',
+    );
+  }
+
+  const result = await productService.getTopSellingProducts(
+    userId,
+    processedSearchTerm, // This should be the text search
+    processedCategoryId, // This should be the category ID
+    processedSubCategoryId, // This should be the subcategory ID
+  );
+
+  console.log('Top', result);
+  res.status(httpStatus.OK).send({
+    success: true,
+    ...result,
+  });
+});
+
+// Helper function to check if string is a valid UUID
+function isValidUUID(str) {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+const getRandomProductsWithShopStocks = catchAsync(async (req, res) => {
+  const result = await productService.getRandomProductsWithShopStocks();
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    ...result,
+  });
+});
+// Delete Product
+const deleteProduct = catchAsync(async (req, res) => {
+  await productService.deleteProduct(req.params.id);
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: 'Product deleted successfully',
+  });
+});
+const createProductBatchsingle = catchAsync(async (req, res) => {
+  const productBatch = await productService.createProductBatchsingle(req.body);
+  res.status(httpStatus.CREATED).send({
+    success: true,
+    message: 'Product batch created successfully',
+    data: productBatch,
+  });
+});
+const getProductById = catchAsync(async (req, res) => {
+  const { productId } = req.params;
+
+  const productDetails = await productService.getProductDetails(productId);
+
+  if (!productDetails) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
+  }
+
+  res.status(httpStatus.OK).send({ product: productDetails });
+});
+const getProductBatchesByShopsController = catchAsync(async (req, res) => {
+  const { productId } = req.params;
+
+  const batches = await productService.getProductBatchesByShops(productId);
+
+  if (!batches || batches.length === 0) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      'No available batches found for this product',
+    );
+  }
+  console.log(batches);
+  res.status(httpStatus.OK).send({ batches });
+});
+// getProductBatchesByShopsForUser
+const getProductBatchesByShopsForUser = catchAsync(async (req, res) => {
+  const { productId } = req.params;
+  const userId = req.user.id;
+  const batches = await productService.getProductBatchesByShopsForUser(
+    productId,
+    userId,
+  );
+
+  if (!batches || batches.length === 0) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      'No available batches found for this product',
+    );
+  }
+    console.log(batches);
+
+  res.status(httpStatus.OK).send({ batches });
+});
+
+module.exports = {
+  createProductBatch,
+  createProduct,
+  getProduct,
+  getProductByCode,
+  getProducts,
+  updateProduct,
+  deleteProduct,
+  getBatchesByProduct,
+  createProductBatchsingle,
+  getProductById,
+  getProductBatchesByShopsController,
+  getTopSellingProducts,
+  getActiveAllProducts,
+  getRandomProductsWithShopStocks,
+  getProductBatchesByShopsForUser,
+};

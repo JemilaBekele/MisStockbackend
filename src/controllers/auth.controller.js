@@ -3,14 +3,62 @@ const catchAsync = require('../utils/catchAsync');
 const { userService, tokenService, authService } = require('../services');
 const ApiError = require('../utils/ApiError');
 
-const register = catchAsync(async (req, res) => {
-  // create a user
+const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
-  // generate token
-  const tokens = await tokenService.generateAuthTokens(user.id);
-  res.status(httpStatus.CREATED).send({ user, tokens });
+  res.status(httpStatus.CREATED).send({ user });
 });
 
+const getUsers = catchAsync(async (req, res) => {
+  const result = await userService.getUsers();
+  res.status(httpStatus.OK).send(result);
+});
+
+const getUser = catchAsync(async (req, res) => {
+  const user = await userService.getUserById(req.params.userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  res.status(httpStatus.OK).send({ user });
+});
+
+const getUsermy = catchAsync(async (req, res) => {
+  const user = await userService.getUserById(req.user.id);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  res.status(httpStatus.OK).send({ user });
+});
+
+const updateUser = catchAsync(async (req, res) => {
+  const updatedUser = await userService.updateUserById(
+    req.params.userId,
+    req.body,
+  );
+  res.status(httpStatus.OK).send({ user: updatedUser });
+});
+
+const deleteUser = catchAsync(async (req, res) => {
+  await userService.deleteUserById(req.params.userId);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
+const changeUserStatus = catchAsync(async (req, res) => {
+  const { status } = req.body;
+  const updatedUser = await userService.changeUserStatus(
+    req.params.userId,
+    status,
+  );
+  res.status(httpStatus.OK).send({ user: updatedUser });
+});
+
+const getUserByEmail = catchAsync(async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Email is required');
+  }
+  const user = await userService.getUserByEmail(email);
+  res.status(httpStatus.OK).send({ user });
+});
 const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const user = await authService.login(
@@ -22,68 +70,53 @@ const login = catchAsync(async (req, res) => {
   const tokens = await tokenService.generateAuthTokens(user.id);
   res.status(httpStatus.OK).send({ user, tokens });
 });
+const changeUserPassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id; // From authentication middleware
 
-const refreshToken = catchAsync(async (req, res) => {
-  const tokens = await authService.refreshAuthToken(req.body.refreshToken);
-  res.status(httpStatus.OK).send({ ...tokens });
-});
+    const updatedUser = await userService.changePassword(
+      userId,
+      currentPassword,
+      newPassword,
+    );
 
-// Update user details
-const updateUser = catchAsync(async (req, res) => {
-  const { userId } = req.params; // assuming userId is passed in the URL params
-  const updatedUser = await userService.updateUser(userId, req.body);
-  res.status(httpStatus.OK).send({ user: updatedUser });
-});
-
-// Change user password
-const changePassword = catchAsync(async (req, res) => {
-  const { userId } = req.params; // assuming userId is passed in the URL params
-  const { oldPassword, newPassword } = req.body;
-  const updatedUser = await userService.changePassword(
-    userId,
-    oldPassword,
-    newPassword,
-  );
-  res.status(httpStatus.OK).send({ user: updatedUser });
-});
-
-const getAllUsers = catchAsync(async (req, res) => {
-  const result = await userService.getAllUsers();
-  res.status(httpStatus.OK).send(result); // returns { users, count }
-});
-
-const getUsersByRoles = catchAsync(async (req, res) => {
-  const result = await userService.getUsersByRoles();
-  res.status(httpStatus.OK).send(result); // returns { users, count }
-});
-// Delete user
-const deleteUser = catchAsync(async (req, res) => {
-  const { userId } = req.params; // assuming userId is passed in the URL params
-  const response = await userService.deleteUser(userId);
-  res.status(httpStatus.OK).send(response); // response could be { message: 'User deleted successfully' }
-});
-const getUserById = catchAsync(async (req, res) => {
-  const { userId } = req.params;
-  const user = await userService.getUserById(userId);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: 'Password changed successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    next(error);
   }
-  res.status(httpStatus.OK).send({ user });
-});
+};
 
-const getFalseconfirm = catchAsync(async (req, res) => {
-  const result = await userService.getFalseconfirm();
-  res.status(httpStatus.OK).send(result); // returns { users, count }
-});
+const resetPassword = async (req, res, next) => {
+  try {
+    const userId = req.user.id; // From authentication middleware
+    const resetBody = req.body;
+
+    const user = await userService.resetPassword(userId, resetBody);
+
+    res.status(httpStatus.OK).json({
+      status: 'success',
+      message: 'Password reset successfully',
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
-  register,
-  login,
-  refreshToken,
+  createUser,
+  getUsers,
+  getUser,
   updateUser,
-  changePassword,
   deleteUser,
-  getAllUsers,
-  getUserById,
-  getUsersByRoles,
-  getFalseconfirm,
+  changeUserStatus,
+  getUserByEmail,
+  login,
+  changeUserPassword,
+  getUsermy,
+  resetPassword,
 };
