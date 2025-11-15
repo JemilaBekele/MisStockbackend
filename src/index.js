@@ -3,20 +3,12 @@ const express = require('express');
 const config = require('./config/config');
 const loader = require('./loaders');
 const logger = require('./config/logger');
-const SystemInitializer = require('./middlewares/initialSetup'); // Add this import
+const SystemInitializer = require('./middlewares/initialSetup');
+const exitHandler = require('./config/exitHandler');
+// Add this import
 // const startInvoiceCron = require('./lib/corn'); // ✅ Adjust path
 const socket = require('./socket/s'); // Import the socket module
-
-const exitHandler = (server) => {
-  if (server) {
-    server.close(() => {
-      logger.info('Server closed');
-      process.exit(1);
-    });
-  } else {
-    process.exit(1);
-  }
-};
+// Example: handle unexpected errors
 
 const unExpectedErrorHandler = (server) => {
   return function (error) {
@@ -45,13 +37,12 @@ const startServer = async () => {
       logger.info(`Environment: ${config.env}`);
     });
     // startInvoiceCron(); // ✅ Start the cron after system is ready
-
-    process.on('uncaughtException', unExpectedErrorHandler(server));
-    process.on('unhandledRejection', unExpectedErrorHandler(server));
+    process.on('uncaughtException', (err) => exitHandler(server, err));
+    process.on('unhandledRejection', (err) => exitHandler(server, err));
     process.on('SIGTERM', () => {
       logger.info('SIGTERM received');
       if (server) {
-        server.close();
+        server.close(() => logger.info('Server closed due to SIGTERM'));
       }
     });
   } catch (error) {

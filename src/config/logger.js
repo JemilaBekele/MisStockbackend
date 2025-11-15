@@ -2,13 +2,15 @@ const winston = require('winston');
 
 const { format, createLogger, transports } = winston;
 const { printf, combine, timestamp, colorize, uncolorize } = format;
-const config = require('./config');
 
-const winstonFormat = printf(
-  // eslint-disable-next-line no-shadow
-  ({ level, message, timestamp, stack }) =>
-    `${timestamp}: ${level}: ${stack || message}`,
-);
+const config = require('./config'); // should contain config.env
+
+// Custom log format
+const winstonFormat = printf(({ level, message, timestamp: ts, stack }) => {
+  return `${ts}: ${level}: ${stack || message}`;
+});
+
+// Create logger
 const logger = createLogger({
   level: config.env === 'development' ? 'debug' : 'info',
   format: combine(
@@ -18,4 +20,5 @@ const logger = createLogger({
   ),
   transports: [new transports.Console()],
 });
+
 module.exports = logger;
