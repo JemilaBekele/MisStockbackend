@@ -10,12 +10,12 @@ const exitHandler = require('./config/exitHandler');
 const socket = require('./socket/s'); // Import the socket module
 // Example: handle unexpected errors
 
-const unExpectedErrorHandler = (server) => {
-  return function (error) {
-    logger.error(error);
-    exitHandler(server);
-  };
-};
+// const unExpectedErrorHandler = (server) => {
+//   return function (error) {
+//     logger.error(error);
+//     exitHandler(server);
+//   };
+// };
 
 const startServer = async () => {
   try {

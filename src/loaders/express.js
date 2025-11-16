@@ -76,8 +76,19 @@ module.exports = async (app) => {
   );
   app.use(mongoSanitize());
   if (env === 'production') {
-    app.use(cors({ origin: 'url' }));
-    app.options('*', cors({ origin: 'url' }));
+    app.use(
+      cors({
+        origin: ['https://ordere.net', 'http://localhost:3000'],
+        credentials: true,
+      }),
+    );
+    app.options(
+      '*',
+      cors({
+        origin: ['https://ordere.net', 'http://localhost:3000'],
+        credentials: true,
+      }),
+    );
   } else {
     // enabling all cors
     app.use(cors());
