@@ -121,25 +121,6 @@ module.exports = async (app) => {
   app.use(ReportRouter);
   app.use(InventoryDashboardRouter);
   // Error handling middleware
-  app.use((error, req, res) => {
-    if (error instanceof ApiError) {
-      console.log(
-        `💥 Error ${error.statusCode}: ${error.message} - Path: ${req.method} ${req.originalUrl}`,
-      );
-    } else {
-      console.log(
-        `💥 Unexpected error: ${error.message} - Path: ${req.method} ${req.originalUrl}`,
-      );
-    }
-
-    // Your existing error response format
-    res.status(error.statusCode || 500).json({
-      error: true,
-      code: error.statusCode || 500,
-      message: error.message,
-    });
-  });
-
   // Then your 404 handler
   // 404 handler - MODIFY THIS
   app.use((req, res, next) => {
