@@ -121,22 +121,27 @@ module.exports = async (app) => {
   app.use(ReportRouter);
   app.use(InventoryDashboardRouter);
   // Error handling middleware
-  app.use((error, req, res) => {
-    if (error instanceof ApiError) {
-      console.log(
-        `💥 Error ${error.statusCode}: ${error.message} - Path: ${req.method} ${req.originalUrl}`,
-      );
-    } else {
-      console.log(
-        `💥 Unexpected error: ${error.message} - Path: ${req.method} ${req.originalUrl}`,
-      );
-    }
+  // Temporary debug error handler
+  app.use((error, req, res, next) => {
+    console.log('=== ERROR HANDLER DEBUG INFO ===');
+    console.log('Error:', error);
+    console.log('Request exists:', !!req);
+    console.log('Request method:', req?.method);
+    console.log('Request URL:', req?.originalUrl);
+    console.log('Stack trace:', new Error().stack);
+    console.log('================================');
 
-    // Your existing error response format
-    res.status(error.statusCode || 500).json({
+    const method = req?.method || 'UNKNOWN';
+    const path = req?.originalUrl || 'UNKNOWN_PATH';
+
+    console.log(
+      `💥 Error: ${error?.message || 'undefined'} - Path: ${method} ${path}`,
+    );
+
+    res.status(error?.statusCode || 500).json({
       error: true,
-      code: error.statusCode || 500,
-      message: error.message,
+      code: error?.statusCode || 500,
+      message: error?.message || 'Internal Server Error',
     });
   });
 
