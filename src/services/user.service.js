@@ -126,7 +126,10 @@ const getUsers = async ({ startDate, endDate } = {}) => {
   const users = await prisma.user.findMany({
     where: whereClause,
     include: {
-      role: true, // <-- This includes the related role data
+      role: true,
+      shops: true, // <-- This includes the related shops data
+      stores: true, // <-- This includes the related stores data
+      branch: true, // <-- This includes the related branch data
     },
   });
 
