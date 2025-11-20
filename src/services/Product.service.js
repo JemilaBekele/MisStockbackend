@@ -204,10 +204,6 @@ const getProductByCode = async (productCode) => {
   return product;
 };
 
-// Get all Products
-
-// Helper function to get random products with shop stocks
-
 const getBatchesByProduct = async (productId) => {
   const batches = await prisma.productBatch.findMany({
     where: {
@@ -227,8 +223,7 @@ const getBatchesByProduct = async (productId) => {
     count: batches.length,
   };
 };
-// Create Product
-// Create Product
+
 const generateBatchNumber = () => {
   const date = new Date();
   const year = date.getFullYear().toString().slice(-2);
@@ -1327,10 +1322,6 @@ const searchProducts = async (
   subCategoryId = null,
 ) => {
   // Add debug logging to see what's being searched
-  console.log('🔍 Searching for searchTerm:', searchTerm);
-  console.log('📁 Category ID:', categoryId);
-  console.log('📂 SubCategory ID:', subCategoryId);
-
   // First, get all products and filter manually for case-insensitive search
   const allProducts = await prisma.product.findMany({
     where: {
@@ -1484,7 +1475,6 @@ const getTopSellingProducts = async (
     userAccessibleShopIds = userWithShops?.shops.map((shop) => shop.id) || [];
   }
 
-  console.log('userAccessible', userAccessibleShopIds);
 
   // Build the shop filter condition
   const shopFilterCondition = userId

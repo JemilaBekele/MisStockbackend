@@ -52,11 +52,24 @@ const deleteBranch = catchAsync(async (req, res) => {
     message: 'Branch deleted successfully',
   });
 });
+const getAllProducts = catchAsync(async (req, res) => {
+  const userId = req.user?.id;
+  const result = await branchService.getAllProducts(userId);
 
+  res.status(200).json({
+    status: 'success',
+    data: {
+      products: result.products,
+      count: result.count,
+      userAccessibleShops: result.userAccessibleShops,
+    },
+  });
+});
 module.exports = {
   createBranch,
   getBranch,
   getBranches,
   updateBranch,
   deleteBranch,
+  getAllProducts,
 };

@@ -138,7 +138,6 @@ const getProducts = catchAsync(async (req, res) => {
   });
 });
 const getTopSellingProducts = catchAsync(async (req, res) => {
-  console.log('req.query', req.query);
   const { searchTerm, categoryId, subCategoryId } = req.query;
   const userId = req.user.id;
 
@@ -149,12 +148,6 @@ const getTopSellingProducts = catchAsync(async (req, res) => {
     categoryId && categoryId.trim() !== '' ? categoryId.trim() : null;
   const processedSubCategoryId =
     subCategoryId && subCategoryId.trim() !== '' ? subCategoryId.trim() : null;
-
-  console.log('🎯 Processed parameters:', {
-    searchTerm: processedSearchTerm,
-    categoryId: processedCategoryId,
-    subCategoryId: processedSubCategoryId,
-  });
 
   // DEBUG: Check if parameters are being mixed up
   if (processedSearchTerm && isValidUUID(processedSearchTerm)) {
@@ -170,7 +163,6 @@ const getTopSellingProducts = catchAsync(async (req, res) => {
     processedSubCategoryId, // This should be the subcategory ID
   );
 
-  console.log('Top', result);
   res.status(httpStatus.OK).send({
     success: true,
     ...result,
@@ -229,7 +221,6 @@ const getProductBatchesByShopsController = catchAsync(async (req, res) => {
       'No available batches found for this product',
     );
   }
-  console.log(batches);
   res.status(httpStatus.OK).send({ batches });
 });
 // getProductBatchesByShopsForUser
@@ -247,7 +238,6 @@ const getProductBatchesByShopsForUser = catchAsync(async (req, res) => {
       'No available batches found for this product',
     );
   }
-    console.log(batches);
 
   res.status(httpStatus.OK).send({ batches });
 });

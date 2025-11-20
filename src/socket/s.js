@@ -8,8 +8,9 @@ module.exports = {
       cors: {
         origin: '*',
       },
+      path: '/api/socket.io', // ✅ ADD THIS LINE - crucial for matching frontend
     });
-
+    
     io.on('connection', (socket) => {
       console.log('User connected:', socket.id);
 

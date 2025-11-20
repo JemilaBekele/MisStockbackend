@@ -13,7 +13,12 @@ router.post(
   branchController.createBranch,
 );
 
-// Get a branch by ID
+// Get a branch by ID getAllProducts
+router.get(
+  '/api/all/Products/stock/employee',
+  auth,
+  branchController.getAllProducts,
+);
 router.get(
   '/api/branches/:id',
   auth,
