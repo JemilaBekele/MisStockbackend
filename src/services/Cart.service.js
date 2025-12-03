@@ -905,15 +905,33 @@ const checkoutCart = async (cartId, checkoutData, userId) => {
 
 // Update the service function signature
 const addToWaitlist = async (data, userId) => {
-  const { cartItemId, note } = data;
+  const { cartItemIds, note } = data; // Changed to accept array of cartItemIds
 
-  if (!cartItemId || typeof cartItemId !== 'string') {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Valid cartItemId is required');
+  // Validate input
+  if (!cartItemIds || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Valid array of cartItemIds is required',
+    );
   }
 
-  // Fetch cart item with cart and customer information
-  const cartItem = await prisma.cartItem.findUnique({
-    where: { id: cartItemId },
+  if (cartItemIds.some((id) => typeof id !== 'string')) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'All cartItemIds must be strings',
+    );
+  }
+
+  console.log(`=== BULK WAITLIST ADD START ===`);
+  console.log(
+    `Processing ${cartItemIds.length} cart items for user: ${userId}`,
+  );
+
+  // Fetch all cart items with their carts and customer information
+  const cartItems = await prisma.cartItem.findMany({
+    where: {
+      id: { in: cartItemIds },
+    },
     include: {
       product: {
         include: {
@@ -931,48 +949,93 @@ const addToWaitlist = async (data, userId) => {
     },
   });
 
-  if (!cartItem) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Cart item not found');
+  console.log(`Found ${cartItems.length} cart items`);
+
+  if (cartItems.length === 0) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      'No cart items found with the provided IDs',
+    );
   }
 
+  // Check if all cart items belong to the same cart
+  const cartIds = [...new Set(cartItems.map((item) => item.cartId))];
+  if (cartIds.length > 1) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'All cart items must belong to the same cart',
+    );
+  }
+
+  const cartId = cartIds[0];
+
   // Validate cart has a customer (customerId is required for waitlist)
-  if (!cartItem.cart.customerId) {
+  const { customerId } = cartItems[0].cart;
+  if (!customerId) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       'Cart must be associated with a customer to add to waitlist',
     );
   }
 
-  // Check if waitlist item already exists for same product, same shop, AND same quantity
-  const existingWaitlistItem = await prisma.waitlist.findFirst({
+  console.log(`Customer ID: ${customerId}, Cart ID: ${cartId}`);
+
+  // Check for existing waitlist items for these cart items
+  const existingWaitlistItems = await prisma.waitlist.findMany({
     where: {
-      cartId: cartItem.cartId,
-      productId: cartItem.productId,
-      shopId: cartItem.shopId,
-      quantity: cartItem.quantity,
-      cartItemId: { not: cartItemId },
+      cartId,
+      cartItemId: { in: cartItemIds },
     },
   });
 
-  let waitlist;
+  console.log(`Found ${existingWaitlistItems.length} existing waitlist items`);
 
-  if (existingWaitlistItem) {
-    // Update existing waitlist item
-    waitlist = await prisma.waitlist.update({
-      where: { id: existingWaitlistItem.id },
-      data: {
-        note: note || `Updated waitlist - ${cartItem.product.name}`,
-        updatedById: userId,
-      },
-      include: {
-        user: true,
-        customer: true,
-        branch: true,
-        cart: {
+  const waitlistResults = [];
+  const errors = [];
+
+  // Process each cart item
+  for (const cartItem of cartItems) {
+    try {
+      // Check if this specific cart item already has a waitlist entry
+      const existingItem = existingWaitlistItems.find(
+        (item) => item.cartItemId === cartItem.id,
+      );
+
+      let waitlist;
+
+      if (existingItem) {
+        // Update existing waitlist item
+        console.log(
+          `Updating existing waitlist item for product: ${cartItem.product.name}`,
+        );
+        waitlist = await prisma.waitlist.update({
+          where: { id: existingItem.id },
+          data: {
+            note: note || `Updated waitlist - ${cartItem.product.name}`,
+            updatedById: userId,
+          },
           include: {
-            items: {
+            user: true,
+            customer: true,
+            branch: true,
+            cart: {
               include: {
-                shop: true,
+                items: {
+                  include: {
+                    shop: true,
+                    product: {
+                      include: {
+                        category: true,
+                        unitOfMeasure: true,
+                      },
+                    },
+                    unitOfMeasure: true,
+                  },
+                },
+              },
+            },
+            cartItem: {
+              include: {
                 product: {
                   include: {
                     category: true,
@@ -980,57 +1043,51 @@ const addToWaitlist = async (data, userId) => {
                   },
                 },
                 unitOfMeasure: true,
-              },
-            },
-          },
-        },
-        cartItem: {
-          include: {
-            product: {
-              include: {
-                category: true,
-                unitOfMeasure: true,
-              },
-            },
-            unitOfMeasure: true,
-            shop: true,
-          },
-        },
-        product: {
-          include: {
-            category: true,
-            unitOfMeasure: true,
-          },
-        },
-        createdBy: true,
-        updatedBy: true,
-      },
-    });
-  } else {
-    // Create new waitlist entry with REQUIRED customerId
-    waitlist = await prisma.waitlist.create({
-      data: {
-        userId,
-        customerId: cartItem.cart.customerId, // REQUIRED - no longer optional
-        branchId: cartItem.cart.branchId || undefined,
-        cartId: cartItem.cartId,
-        cartItemId,
-        productId: cartItem.productId,
-        shopId: cartItem.shopId,
-        quantity: cartItem.quantity,
-        note: note || `Item moved to waitlist - ${cartItem.product.name}`,
-        createdById: userId,
-        updatedById: userId,
-      },
-      include: {
-        user: true,
-        customer: true,
-        branch: true,
-        cart: {
-          include: {
-            items: {
-              include: {
                 shop: true,
+              },
+            },
+            createdBy: true,
+            updatedBy: true,
+          },
+        });
+      } else {
+        // Create new waitlist entry - only include fields that exist in Waitlist model
+        console.log(
+          `Creating new waitlist item for product: ${cartItem.product.name}`,
+        );
+        waitlist = await prisma.waitlist.create({
+          data: {
+            userId,
+            customerId, // Required field from Waitlist model
+            branchId: cartItem.cart.branchId || undefined,
+            cartId,
+            cartItemId: cartItem.id, // Link to the specific cart item
+            note: note || `Item moved to waitlist - ${cartItem.product.name}`,
+            createdById: userId,
+            updatedById: userId,
+          },
+          include: {
+            user: true,
+            customer: true,
+            branch: true,
+            cart: {
+              include: {
+                items: {
+                  include: {
+                    shop: true,
+                    product: {
+                      include: {
+                        category: true,
+                        unitOfMeasure: true,
+                      },
+                    },
+                    unitOfMeasure: true,
+                  },
+                },
+              },
+            },
+            cartItem: {
+              include: {
                 product: {
                   include: {
                     category: true,
@@ -1038,37 +1095,54 @@ const addToWaitlist = async (data, userId) => {
                   },
                 },
                 unitOfMeasure: true,
+                shop: true,
               },
             },
+            createdBy: true,
+            updatedBy: true,
           },
-        },
-        cartItem: {
-          include: {
-            product: {
-              include: {
-                category: true,
-                unitOfMeasure: true,
-              },
-            },
-            unitOfMeasure: true,
-            shop: true,
-          },
-        },
-        product: {
-          include: {
-            category: true,
-            unitOfMeasure: true,
-          },
-        },
-        createdBy: true,
-        updatedBy: true,
-      },
-    });
+        });
+      }
+
+      waitlistResults.push(waitlist);
+      console.log(`✓ Successfully processed: ${cartItem.product.name}`);
+    } catch (error) {
+      console.error(
+        `✗ Error processing cart item ${cartItem.id}:`,
+        error.message,
+      );
+      errors.push({
+        cartItemId: cartItem.id,
+        productName: cartItem.product.name,
+        error: error.message,
+      });
+    }
   }
 
-  return waitlist;
-};
+  console.log(`=== BULK WAITLIST ADD COMPLETE ===`);
+  console.log(`Successfully processed: ${waitlistResults.length} items`);
+  console.log(`Errors: ${errors.length} items`);
 
+  // If all items failed, throw an error
+  if (waitlistResults.length === 0 && errors.length > 0) {
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to add any items to waitlist',
+      { errors },
+    );
+  }
+
+  // Return results
+  return {
+    success: true,
+    message: `Successfully added ${waitlistResults.length} item(s) to waitlist`,
+    totalItems: cartItems.length,
+    successfulItems: waitlistResults.length,
+    failedItems: errors.length,
+    waitlistItems: waitlistResults,
+    errors: errors.length > 0 ? errors : undefined,
+  };
+};
 // Remove item from waitlist
 const removeItemFromWaitlist = async (waitlistItemId) => {
   const waitlistItem = await prisma.waitlist.findUnique({

@@ -105,21 +105,16 @@ const assignCustomerToCart = catchAsync(async (req, res) => {
   const { cartId } = req.params;
   const { customerId } = req.body;
 
-  try {
-    const updatedCart = await cartService.assignCustomerToCart(
-      cartId,
-      customerId,
-    );
+  const updatedCart = await cartService.assignCustomerToCart(
+    cartId,
+    customerId,
+  );
 
-    res.status(httpStatus.OK).send({
-      success: true,
-      message: 'Customer assigned to cart successfully',
-      cart: updatedCart,
-    });
-  } catch (error) {
-    console.error('Controller Error:', error.message);
-    throw error; // Let catchAsync handle it
-  }
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: 'Customer assigned to cart successfully',
+    cart: updatedCart,
+  });
 });
 // Checkout cart (convert to sell)
 const checkoutCart = catchAsync(async (req, res) => {
@@ -161,14 +156,75 @@ const deleteCart = catchAsync(async (req, res) => {
 // Add item to waitlist
 const addToWaitlist = catchAsync(async (req, res) => {
   const userId = req.user.id;
-  console.log('Request Body:', req.body); // Debug log
-  const waitlist = await cartService.addToWaitlist(req.body, userId);
+  const { cartItemIds, note } = req.body;
 
-  res.status(httpStatus.CREATED).send({
-    success: true,
-    message: 'Item added to waitlist successfully',
-    waitlist,
+  console.log('=== CONTROLLER START ===');
+  console.log('User ID:', userId);
+  console.log('Request Body:', JSON.stringify(req.body, null, 2));
+
+  // Enhanced validation with specific messages
+  if (!cartItemIds) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'cartItemIds field is required');
+  }
+
+  if (!Array.isArray(cartItemIds)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `cartItemIds must be an array. Received: ${typeof cartItemIds}`,
+    );
+  }
+
+  if (cartItemIds.length === 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'cartItemIds array cannot be empty',
+    );
+  }
+
+  // Validate each item in array
+  cartItemIds.forEach((id, index) => {
+    if (typeof id !== 'string') {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `cartItemIds[${index}] must be a string. Received: ${typeof id}`,
+      );
+    }
+    if (!id.trim()) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `cartItemIds[${index}] cannot be empty`,
+      );
+    }
   });
+
+  console.log('Validation passed, calling service...');
+
+  try {
+    const result = await cartService.addToWaitlist(
+      { cartItemIds, note },
+      userId,
+    );
+
+    console.log('Service returned:', JSON.stringify(result, null, 2));
+
+    // Send appropriate response based on results
+    if (result.failedItems > 0) {
+      res.status(httpStatus.PARTIAL_CONTENT).send({
+        success: true,
+        message: result.message,
+        data: result,
+      });
+    } else {
+      res.status(httpStatus.CREATED).send({
+        success: true,
+        message: result.message,
+        data: result,
+      });
+    }
+  } catch (error) {
+    console.error('Service error:', error);
+    throw error; // Let the catchAsync handle it
+  }
 });
 //
 const removeItemFromWaitlist = catchAsync(async (req, res) => {
