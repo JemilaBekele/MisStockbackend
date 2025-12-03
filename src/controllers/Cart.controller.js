@@ -104,12 +104,10 @@ const removeItemFromCart = catchAsync(async (req, res) => {
 const assignCustomerToCart = catchAsync(async (req, res) => {
   const { cartId } = req.params;
   const { customerId } = req.body;
-  const userId = req.user.id;
 
   const updatedCart = await cartService.assignCustomerToCart(
     cartId,
     customerId,
-    userId,
   );
 
   res.status(httpStatus.OK).send({

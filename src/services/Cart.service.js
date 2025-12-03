@@ -730,42 +730,116 @@ const removeItemFromCart = async (cartItemId) => {
 
   return { message: 'Item removed from cart successfully' };
 };
-const assignCustomerToCart = async (cartId, customerId, userId) => {
-  // Validate customer exists
-  const customer = await prisma.customer.findUnique({
-    where: { id: customerId },
-  });
+const assignCustomerToCart = async (cartId, customerId) => {
+  console.log('=== ASSIGN CUSTOMER TO CART START ===');
+  console.log('Inputs:', { cartId, customerId });
+  console.log('---------------------------');
 
-  if (!customer) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Customer not found');
+  try {
+    // Validate customer exists
+    console.log('1. Validating customer exists...');
+    console.log('   Customer ID:', customerId);
+    
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+
+    console.log('   Customer found:', customer ? {
+      id: customer.id,
+      name: customer.name,
+      phone1: customer.phone1
+    } : 'NULL');
+
+    if (!customer) {
+      console.error('ERROR: Customer not found');
+      throw new ApiError(httpStatus.NOT_FOUND, 'Customer not found');
+    }
+    console.log('✓ Customer validation passed');
+
+    // Validate cart exists
+    console.log('\n2. Validating cart exists...');
+    console.log('   Cart ID:', cartId);
+    
+    const cart = await prisma.addToCart.findUnique({
+      where: { id: cartId },
+    });
+
+    console.log('   Cart found:', cart ? {
+      id: cart.id,
+      userId: cart.userId,
+      customerId: cart.customerId,
+      isCheckedOut: cart.isCheckedOut,
+      totalItems: cart.totalItems
+    } : 'NULL');
+
+    if (!cart) {
+      console.error('ERROR: Cart not found');
+      throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
+    }
+    console.log('✓ Cart validation passed');
+
+    // Check if cart is already checked out
+    console.log('\n3. Checking cart checkout status...');
+    console.log('   Cart isCheckedOut:', cart.isCheckedOut);
+    
+    if (cart.isCheckedOut) {
+      console.error('ERROR: Cart is already checked out');
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Cannot assign customer to checked out cart',
+      );
+    }
+    console.log('✓ Cart is not checked out');
+
+    // Check if cart already has this customer
+    console.log('\n4. Checking existing customer assignment...');
+    console.log('   Current cart customerId:', cart.customerId);
+    console.log('   New customerId:', customerId);
+    
+    if (cart.customerId === customerId) {
+      console.log('⚠️ Cart already assigned to this customer');
+      console.log('=== ASSIGN CUSTOMER TO CART COMPLETE (no change needed) ===');
+      return cart; // Return existing cart without update
+    }
+
+    // Update cart with customer
+    console.log('\n5. Updating cart with customer...');
+    const updatedCart = await prisma.addToCart.update({
+      where: { id: cartId },
+      data: {
+        customerId,
+      },
+    });
+
+    console.log('✅ Cart updated successfully');
+    console.log('   Updated cart:', {
+      id: updatedCart.id,
+      customerId: updatedCart.customerId,
+      updatedAt: updatedCart.updatedAt
+    });
+
+    console.log('\n=== ASSIGN CUSTOMER TO CART COMPLETE ===');
+    console.log('✅ Customer assigned to cart successfully');
+    
+    return updatedCart;
+    
+  } catch (error) {
+    console.error('\n!!! ASSIGN CUSTOMER TO CART ERROR !!!');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Stack trace:', error.stack);
+    
+    // Log specific error details
+    if (error.code) {
+      console.error('Error code:', error.code);
+    }
+    if (error.meta) {
+      console.error('Error meta:', error.meta);
+    }
+    
+    // Re-throw the error for the caller to handle
+    throw error;
   }
-
-  // Validate cart exists
-  const cart = await prisma.addToCart.findUnique({
-    where: { id: cartId },
-  });
-
-  if (!cart) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
-  }
-
-  // Check if cart is already checked out
-  if (cart.isCheckedOut) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Cannot assign customer to checked out cart',
-    );
-  }
-
-  // Update cart with customer
-  const updatedCart = await prisma.addToCart.update({
-    where: { id: cartId },
-    data: {
-      customerId,
-    },
-  });
-
-  return updatedCart;
 };
 
 // Clear cart (remove all items)

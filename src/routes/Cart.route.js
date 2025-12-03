@@ -16,7 +16,6 @@ router.get(
 );
 router.put(
   '/api/carts/assign/customer/:cartId',
-  auth,
   cartController.assignCustomerToCart,
 );
 // Get current user's cart
