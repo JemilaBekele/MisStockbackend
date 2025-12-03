@@ -1158,6 +1158,8 @@ const clearWaitlist = async (cartId) => {
 
 // Get waitlists by user
 const getWaitlistsByUser = async (userId, filters = {}) => {
+  console.log('🔍 getWaitlistsByUser called with:', { userId, filters });
+  
   const { startDate, endDate } = filters;
 
   const whereClause = {
@@ -1171,76 +1173,106 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
     if (endDate) whereClause.createdAt.lte = new Date(endDate);
   }
 
-  const waitlists = await prisma.waitlist.findMany({
-    where: whereClause,
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include: {
-      user: true,
-      customer: true,
-      branch: true,
-      cart: true,
-      cartItem: {
-        include: {
-          product: true,
-          unitOfMeasure: true,
-          shop: true,
-          batch: true,
-        },
+  console.log('📝 Prisma where clause:', JSON.stringify(whereClause, null, 2));
+
+  try {
+    const waitlists = await prisma.waitlist.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: 'desc',
       },
-      createdBy: true,
-      updatedBy: true,
-    },
-  });
+      include: {
+        user: true,
+        customer: true,
+        branch: true,
+        cart: true,
+        cartItem: {
+          include: {
+            product: true,
+            unitOfMeasure: true,
+            shop: true,
+            batch: true,
+          },
+        },
+        createdBy: true,
+        updatedBy: true,
+      },
+    });
 
-  // Transform the data structure to match frontend expectations
-  return waitlists.map((waitlist) => {
-    // Create a properly structured cartItem if it exists
-    const cartItem = waitlist.cartItem
-      ? {
-          id: waitlist.cartItem.id,
-          cartId: waitlist.cartItem.cartId,
-          shopId: waitlist.cartItem.shopId,
-          productId: waitlist.cartItem.productId,
-          unitOfMeasureId: waitlist.cartItem.unitOfMeasureId,
-          quantity: waitlist.quantity, // Use waitlist quantity
-          unitPrice: waitlist.cartItem.unitPrice,
-          totalPrice: waitlist.cartItem.totalPrice,
-          notes: waitlist.cartItem.notes,
-          createdAt: waitlist.cartItem.createdAt,
-          updatedAt: waitlist.cartItem.updatedAt,
-          shop: waitlist.cartItem.shop,
-          product: waitlist.cartItem.product,
-          batch: waitlist.cartItem.batch,
-          unitOfMeasure: waitlist.cartItem.unitOfMeasure,
-        }
-      : null;
+    console.log('✅ Found waitlists:', waitlists.length);
+    if (waitlists.length > 0) {
+      console.log('📊 First waitlist item structure:', {
+        id: waitlists[0].id,
+        quantity: waitlists[0].quantity,
+        cartItemId: waitlists[0].cartItemId,
+        cartItemExists: !!waitlists[0].cartItem,
+        cartItemQuantity: waitlists[0].cartItem?.quantity,
+        customerName: waitlists[0].customer?.name,
+        productName: waitlists[0].cartItem?.product?.name
+      });
+    }
 
-    return {
-      id: waitlist.id,
-      userId: waitlist.userId,
-      customerId: waitlist.customerId,
-      branchId: waitlist.branchId,
-      cartId: waitlist.cartId,
-      cartItemId: waitlist.cartItemId,
-      note: waitlist.note,
-      quantity: waitlist.quantity, // Keep the original quantity on waitlist
-      createdById: waitlist.createdById,
-      updatedById: waitlist.updatedById,
-      createdAt: waitlist.createdAt,
-      updatedAt: waitlist.updatedAt,
+    // Transform the data structure to match frontend expectations
+    const transformedWaitlists = waitlists.map((waitlist) => {
+      // Create a properly structured cartItem if it exists
+      const cartItem = waitlist.cartItem
+        ? {
+            id: waitlist.cartItem.id,
+            cartId: waitlist.cartItem.cartId,
+            shopId: waitlist.cartItem.shopId,
+            productId: waitlist.cartItem.productId,
+            unitOfMeasureId: waitlist.cartItem.unitOfMeasureId,
+            quantity: waitlist.quantity, // Use waitlist quantity
+            unitPrice: waitlist.cartItem.unitPrice,
+            totalPrice: waitlist.cartItem.totalPrice,
+            notes: waitlist.cartItem.notes,
+            createdAt: waitlist.cartItem.createdAt,
+            updatedAt: waitlist.cartItem.updatedAt,
+            shop: waitlist.cartItem.shop,
+            product: waitlist.cartItem.product,
+            batch: waitlist.cartItem.batch,
+            unitOfMeasure: waitlist.cartItem.unitOfMeasure,
+          }
+        : null;
 
-      // Relations
-      user: waitlist.user,
-      customer: waitlist.customer,
-      branch: waitlist.branch,
-      cart: waitlist.cart,
-      cartItem, // Use the transformed cartItem
-      createdBy: waitlist.createdBy,
-      updatedBy: waitlist.updatedBy,
-    };
-  });
+      return {
+        id: waitlist.id,
+        userId: waitlist.userId,
+        customerId: waitlist.customerId,
+        branchId: waitlist.branchId,
+        cartId: waitlist.cartId,
+        cartItemId: waitlist.cartItemId,
+        note: waitlist.note,
+        quantity: waitlist.quantity, // Keep the original quantity on waitlist
+        createdById: waitlist.createdById,
+        updatedById: waitlist.updatedById,
+        createdAt: waitlist.createdAt,
+        updatedAt: waitlist.updatedAt,
+
+        // Relations
+        user: waitlist.user,
+        customer: waitlist.customer,
+        branch: waitlist.branch,
+        cart: waitlist.cart,
+        cartItem, // Use the transformed cartItem
+        createdBy: waitlist.createdBy,
+        updatedBy: waitlist.updatedBy,
+      };
+    });
+
+    console.log('🚀 Returning transformed waitlists count:', transformedWaitlists.length);
+    return transformedWaitlists;
+
+  } catch (error) {
+    console.error('❌ Error in getWaitlistsByUser:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
+    throw error;
+  }
 };
 
 // Convert waitlist to cart item
