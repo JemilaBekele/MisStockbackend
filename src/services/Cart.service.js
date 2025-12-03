@@ -1191,7 +1191,6 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
             product: true,
             unitOfMeasure: true,
             shop: true,
-            batch: true,
           },
         },
         createdBy: true,
@@ -1230,7 +1229,6 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
             updatedAt: waitlist.cartItem.updatedAt,
             shop: waitlist.cartItem.shop,
             product: waitlist.cartItem.product,
-            batch: waitlist.cartItem.batch,
             unitOfMeasure: waitlist.cartItem.unitOfMeasure,
           }
         : null;
