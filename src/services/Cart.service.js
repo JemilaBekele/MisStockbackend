@@ -803,192 +803,104 @@ const clearCart = async (cartId, userId) => {
 };
 // Checkout cart (convert to sell)
 const checkoutCart = async (cartId, checkoutData, userId) => {
-  console.log('=== CHECKOUT CART START ===');
-  console.log('Inputs:', { cartId, checkoutData, userId });
-  console.log('---------------------------');
+  // Get user with branch information
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { branch: true },
+  });
 
-  try {
-    // Get user with branch information
-    console.log('1. Fetching user with ID:', userId);
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { branch: true },
-    });
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
 
-    console.log(
-      'User found:',
-      user
-        ? {
-            id: user.id,
-            email: user.email,
-            branchId: user.branchId,
-            branch: user.branch,
-          }
-        : 'NULL',
-    );
-
-    if (!user) {
-      console.error('ERROR: User not found');
-      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-    }
-
-    // Fetch cart with customer information
-    console.log('\n2. Fetching cart with ID:', cartId);
-    const cart = await prisma.addToCart.findUnique({
-      where: { id: cartId },
-      include: {
-        customer: true,
-        items: {
-          include: {
-            shop: true,
-            product: {
-              include: {
-                category: true,
-                unitOfMeasure: true,
-              },
+  // Fetch cart with customer information
+  const cart = await prisma.addToCart.findUnique({
+    where: { id: cartId },
+    include: {
+      customer: true,
+      items: {
+        include: {
+          shop: true,
+          product: {
+            include: {
+              category: true,
+              unitOfMeasure: true,
             },
-            unitOfMeasure: true,
           },
+          unitOfMeasure: true,
         },
       },
-    });
+    },
+  });
 
-    console.log(
-      'Cart found:',
-      cart
-        ? {
-            id: cart.id,
-            customerId: cart.customerId,
-            isCheckedOut: cart.isCheckedOut,
-            itemsCount: cart.items?.length || 0,
-            hasCustomer: !!cart.customer,
-          }
-        : 'NULL',
-    );
-
-    if (!cart) {
-      console.error('ERROR: Cart not found');
-      throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
-    }
-
-    // Validation checks
-    console.log('\n3. Performing validations:');
-
-    if (cart.isCheckedOut) {
-      console.error('ERROR: Cart is already checked out');
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Cart is already checked out');
-    }
-    console.log('✓ Cart not checked out - OK');
-
-    if (cart.items.length === 0) {
-      console.error('ERROR: Cart has no items');
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot checkout empty cart');
-    }
-    console.log(`✓ Cart has ${cart.items.length} items - OK`);
-
-    if (!cart.customerId) {
-      console.error('ERROR: Cart has no customerId');
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'Cart must be associated with a customer to checkout',
-      );
-    }
-    console.log(`✓ Cart has customerId: ${cart.customerId} - OK`);
-
-    if (!cart.customer) {
-      console.error('ERROR: Customer not found in cart');
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        'Associated customer not found',
-      );
-    }
-    console.log(
-      `✓ Customer found: ${cart.customer.name || cart.customer.id} - OK`,
-    );
-
-    // Prepare sell body
-    console.log('\n4. Preparing sell body:');
-
-    const sellBody = {
-      ...checkoutData,
-      branchId: user.branchId,
-      customerId: cart.customerId,
-      customer: cart.customer,
-      items: cart.items.map((item, index) => {
-        const itemData = {
-          productId: item.productId,
-          shopId: item.shopId,
-          unitOfMeasureId: item.unitOfMeasureId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-        };
-        console.log(`  Item ${index + 1}:`, itemData);
-        return {
-          ...itemData,
-          product: item.product,
-          shop: item.shop,
-        };
-      }),
-    };
-
-    console.log('Sell body prepared:', {
-      branchId: sellBody.branchId,
-      customerId: sellBody.customerId,
-      itemsCount: sellBody.items.length,
-      checkoutDataKeys: Object.keys(checkoutData || {}),
-    });
-
-    // Create sell from cart items
-    console.log('\n5. Creating sell via sellService.createSell()');
-    console.log('Calling with userId:', userId);
-
-    const sell = await sellService.createSell(sellBody, userId);
-
-    console.log('Sell created successfully:', {
-      sellId: sell.id,
-      totalAmount: sell.totalAmount,
-      status: sell.status,
-    });
-
-    // Mark cart as checked out
-    console.log('\n6. Marking cart as checked out');
-    await prisma.addToCart.update({
-      where: { id: cartId },
-      data: {
-        isCheckedOut: true,
-        updatedById: userId,
-      },
-    });
-    console.log('✓ Cart marked as checked out');
-
-    // Return updated cart with customer info
-    console.log('\n7. Fetching updated cart details');
-    const updatedCart = await getCartById(cartId);
-
-    console.log('Updated cart:', {
-      id: updatedCart.id,
-      isCheckedOut: updatedCart.isCheckedOut,
-      updatedAt: updatedCart.updatedAt,
-    });
-
-    console.log('\n=== CHECKOUT CART COMPLETE ===');
-    console.log('Returning response...');
-
-    return {
-      cart: updatedCart,
-      sell,
-      message: 'Cart checked out successfully and converted to sale',
-    };
-  } catch (error) {
-    console.error('\n!!! CHECKOUT CART ERROR !!!');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Stack trace:', error.stack);
-    console.error('Failed at step:', error.step || 'Unknown');
-
-    // Re-throw the error for the caller to handle
-    throw error;
+  if (!cart) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
   }
+
+  // Validation checks
+
+  if (cart.isCheckedOut) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Cart is already checked out');
+  }
+
+  if (cart.items.length === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot checkout empty cart');
+  }
+
+  if (!cart.customerId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cart must be associated with a customer to checkout',
+    );
+  }
+
+  if (!cart.customer) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Associated customer not found');
+  }
+
+  // Prepare sell body
+
+  const sellBody = {
+    ...checkoutData,
+    branchId: user.branchId,
+    customerId: cart.customerId,
+    customer: cart.customer,
+    items: cart.items.map((item, index) => {
+      const itemData = {
+        productId: item.productId,
+        shopId: item.shopId,
+        unitOfMeasureId: item.unitOfMeasureId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      };
+      console.log(`  Item ${index + 1}:`, itemData);
+      return {
+        ...itemData,
+        product: item.product,
+        shop: item.shop,
+      };
+    }),
+  };
+
+  const sell = await sellService.createSell(sellBody, userId);
+
+  // Mark cart as checked out
+  await prisma.addToCart.update({
+    where: { id: cartId },
+    data: {
+      isCheckedOut: true,
+      updatedById: userId,
+    },
+  });
+
+  // Return updated cart with customer info
+  const updatedCart = await getCartById(cartId);
+
+  return {
+    cart: updatedCart,
+    sell,
+    message: 'Cart checked out successfully and converted to sale',
+  };
 };
 
 // Update the service function signature
