@@ -908,7 +908,7 @@ const checkoutCart = async (cartId, checkoutData, userId) => {
 // Update the service function signature
 const addToWaitlist = async (data, userId) => {
   const { cartItemIds, note, customerId } = data;
-
+console.log('addToWaitlist called with:', data);
   // Validate input
   if (!cartItemIds || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
     throw new ApiError(
