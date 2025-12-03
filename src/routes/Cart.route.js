@@ -14,7 +14,11 @@ router.get(
   // checkPermission('VIEW_CART'),
   cartController.getCarts,
 );
-
+router.put(
+  '/api/carts/assign/customer/:cartId',
+  auth,
+  cartController.assignCustomerToCart,
+);
 // Get current user's cart
 router.get(
   '/api/carts/my-cart',

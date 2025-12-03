@@ -101,7 +101,23 @@ const removeItemFromCart = catchAsync(async (req, res) => {
     message: result.message,
   });
 });
+const assignCustomerToCart = catchAsync(async (req, res) => {
+  const { cartId } = req.params;
+  const { customerId } = req.body;
+  const userId = req.user.id;
 
+  const updatedCart = await cartService.assignCustomerToCart(
+    cartId,
+    customerId,
+    userId,
+  );
+
+  res.status(httpStatus.OK).send({
+    success: true,
+    message: 'Customer assigned to cart successfully',
+    cart: updatedCart,
+  });
+});
 // Checkout cart (convert to sell)
 const checkoutCart = catchAsync(async (req, res) => {
   const userId = req.user.id;
@@ -142,7 +158,7 @@ const deleteCart = catchAsync(async (req, res) => {
 // Add item to waitlist
 const addToWaitlist = catchAsync(async (req, res) => {
   const userId = req.user.id;
-console.log('Request Body:', req.body); // Debug log
+  console.log('Request Body:', req.body); // Debug log
   const waitlist = await cartService.addToWaitlist(req.body, userId);
 
   res.status(httpStatus.CREATED).send({
@@ -277,6 +293,7 @@ module.exports = {
   deleteCart,
 
   // Waitlist controllers
+  assignCustomerToCart,
   addToWaitlist,
   removeItemFromWaitlist,
   clearWaitlist,

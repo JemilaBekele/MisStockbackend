@@ -730,6 +730,44 @@ const removeItemFromCart = async (cartItemId) => {
 
   return { message: 'Item removed from cart successfully' };
 };
+const assignCustomerToCart = async (cartId, customerId, userId) => {
+  // Validate customer exists
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+  });
+
+  if (!customer) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Customer not found');
+  }
+
+  // Validate cart exists
+  const cart = await prisma.addToCart.findUnique({
+    where: { id: cartId },
+  });
+
+  if (!cart) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
+  }
+
+  // Check if cart is already checked out
+  if (cart.isCheckedOut) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cannot assign customer to checked out cart',
+    );
+  }
+
+  // Update cart with customer
+  const updatedCart = await prisma.addToCart.update({
+    where: { id: cartId },
+    data: {
+      customerId,
+    },
+  });
+
+  return updatedCart;
+};
+
 // Clear cart (remove all items)
 const clearCart = async (cartId, userId) => {
   const cart = await getCartById(cartId);
@@ -1446,6 +1484,7 @@ module.exports = {
   addItemToCart,
   updateCartItem,
   removeItemFromCart,
+  assignCustomerToCart,
   checkoutCart,
   clearCart,
   deleteCart,
