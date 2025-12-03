@@ -764,6 +764,7 @@ model AddToCart {
   branchId     String?
   branch       Branch? @relation(fields: [branchId], references: [id])
   isCheckedOut Boolean @default(false) // true when converted into a Sell
+  isWaitlist   Boolean @default(false) // true = in wait list
 
   customerId  String?   @db.Char(36)
   customer    Customer? @relation(fields: [customerId], references: [id])
@@ -784,9 +785,10 @@ model AddToCart {
 }
 
 model CartItem {
-  id     String    @id @default(uuid()) @map("_id") @db.Char(36)
-  cartId String    @db.Char(36)
-  cart   AddToCart @relation(fields: [cartId], references: [id])
+  id         String    @id @default(uuid()) @map("_id") @db.Char(36)
+  cartId     String    @db.Char(36)
+  cart       AddToCart @relation(fields: [cartId], references: [id])
+  isWaitlist Boolean   @default(false) // true = in wait list
 
   shopId String @db.Char(36)
   shop   Shop   @relation(fields: [shopId], references: [id]) // 🆕 Added shop relation

@@ -472,6 +472,7 @@ exports.Prisma.AddToCartScalarFieldEnum = {
   userId: 'userId',
   branchId: 'branchId',
   isCheckedOut: 'isCheckedOut',
+  isWaitlist: 'isWaitlist',
   customerId: 'customerId',
   totalItems: 'totalItems',
   totalAmount: 'totalAmount',
@@ -484,6 +485,7 @@ exports.Prisma.AddToCartScalarFieldEnum = {
 exports.Prisma.CartItemScalarFieldEnum = {
   id: 'id',
   cartId: 'cartId',
+  isWaitlist: 'isWaitlist',
   shopId: 'shopId',
   productId: 'productId',
   unitOfMeasureId: 'unitOfMeasureId',
