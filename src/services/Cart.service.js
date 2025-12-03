@@ -907,8 +907,9 @@ const checkoutCart = async (cartId, checkoutData, userId) => {
 
 // Update the service function signature
 const addToWaitlist = async (data, userId) => {
-  const { cartItemIds, note, customerId } = data;
-console.log('addToWaitlist called with:', data);
+  const { cartItemIds, note } = data; // Remove customerId from parameters
+  console.log('addToWaitlist called with:', data);
+
   // Validate input
   if (!cartItemIds || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
     throw new ApiError(
@@ -924,24 +925,7 @@ console.log('addToWaitlist called with:', data);
     );
   }
 
-  // Validate customerId is provided
-  if (!customerId || typeof customerId !== 'string') {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Valid customerId is required to add items to waitlist',
-    );
-  }
-
-  // Verify customer exists
-  const customer = await prisma.customer.findUnique({
-    where: { id: customerId },
-  });
-
-  if (!customer) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Customer not found');
-  }
-
-  // Fetch all cart items
+  // Fetch all cart items WITH their cart and customer info
   const cartItems = await prisma.cartItem.findMany({
     where: {
       id: { in: cartItemIds },
@@ -955,7 +939,11 @@ console.log('addToWaitlist called with:', data);
       },
       shop: true,
       unitOfMeasure: true,
-      cart: true,
+      cart: {
+        include: {
+          customer: true, // Include customer to get customerId
+        },
+      },
     },
   });
 
@@ -976,12 +964,33 @@ console.log('addToWaitlist called with:', data);
   }
 
   const cartId = cartIds[0];
+  
+  // Get the customerId from the cart
+  const customerId = cartItems[0].cart.customerId;
+  
+  // Validate that the cart has a customer assigned
+  if (!customerId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cart must have a customer assigned before adding items to waitlist'
+    );
+  }
 
-  // IMPORTANT: Update the cart with the new customer and mark as waitlist
+  // Verify customer exists (optional check)
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+  });
+
+  if (!customer) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Customer not found');
+  }
+
+  console.log(`Using customerId from cart: ${customerId} (${customer.name})`);
+
+  // IMPORTANT: Update the cart to mark as waitlist
   await prisma.addToCart.update({
     where: { id: cartId },
     data: {
-      customerId, // Update cart with new customer
       isWaitlist: true, // Mark cart as waitlist
     },
   });
@@ -1018,11 +1027,10 @@ console.log('addToWaitlist called with:', data);
       let waitlist;
 
       if (existingItem) {
-        // Update existing waitlist with new customer
+        // Update existing waitlist
         waitlist = await prisma.waitlist.update({
           where: { id: existingItem.id },
           data: {
-            customerId, // ← Update with new customer!
             note: note || `Updated waitlist - ${cartItem.product.name}`,
             updatedById: userId,
           },
@@ -1043,11 +1051,11 @@ console.log('addToWaitlist called with:', data);
           },
         });
       } else {
-        // Create new waitlist with new customer
+        // Create new waitlist using customerId from cart
         waitlist = await prisma.waitlist.create({
           data: {
             userId,
-            customerId, // ← Use NEW customer from request!
+            customerId, // ← Use customerId from cart
             branchId: cartItem.cart.branchId || undefined,
             cartId,
             cartItemId: cartItem.id,
