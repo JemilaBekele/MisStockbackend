@@ -37,6 +37,17 @@ const getSellByIdByuser = catchAsync(async (req, res) => {
   });
 });
 
+const unlockSell = catchAsync(async (req, res) => {
+  const sell = await sellService.unlockSell(req.params.id);
+  if (!sell) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Sale not found');
+  }
+  res.status(httpStatus.OK).send({
+    success: true,
+    sell,
+  });
+});
+
 // Get all Sells
 const getSells = catchAsync(async (req, res) => {
   const { startDate, endDate } = req.query;
@@ -276,4 +287,5 @@ module.exports = {
   getAllSellsuser,
   getAllSellsForStore,
   getSellByIdByuser,
+  unlockSell,
 };

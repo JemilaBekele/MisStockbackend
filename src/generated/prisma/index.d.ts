@@ -5380,6 +5380,7 @@ export namespace Prisma {
     phone: string | null
     userCode: string | null
     email: string | null
+    admin: boolean | null
     password: string | null
     branchId: string | null
     roleId: string | null
@@ -5395,6 +5396,7 @@ export namespace Prisma {
     phone: string | null
     userCode: string | null
     email: string | null
+    admin: boolean | null
     password: string | null
     branchId: string | null
     roleId: string | null
@@ -5410,6 +5412,7 @@ export namespace Prisma {
     phone: number
     userCode: number
     email: number
+    admin: number
     password: number
     branchId: number
     roleId: number
@@ -5427,6 +5430,7 @@ export namespace Prisma {
     phone?: true
     userCode?: true
     email?: true
+    admin?: true
     password?: true
     branchId?: true
     roleId?: true
@@ -5442,6 +5446,7 @@ export namespace Prisma {
     phone?: true
     userCode?: true
     email?: true
+    admin?: true
     password?: true
     branchId?: true
     roleId?: true
@@ -5457,6 +5462,7 @@ export namespace Prisma {
     phone?: true
     userCode?: true
     email?: true
+    admin?: true
     password?: true
     branchId?: true
     roleId?: true
@@ -5545,6 +5551,7 @@ export namespace Prisma {
     phone: string | null
     userCode: string | null
     email: string
+    admin: boolean
     password: string
     branchId: string | null
     roleId: string
@@ -5577,6 +5584,7 @@ export namespace Prisma {
     phone?: boolean
     userCode?: boolean
     email?: boolean
+    admin?: boolean
     password?: boolean
     branchId?: boolean
     roleId?: boolean
@@ -5617,6 +5625,7 @@ export namespace Prisma {
     phone?: boolean
     userCode?: boolean
     email?: boolean
+    admin?: boolean
     password?: boolean
     branchId?: boolean
     roleId?: boolean
@@ -5626,7 +5635,7 @@ export namespace Prisma {
     lastLoginAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "phone" | "userCode" | "email" | "password" | "branchId" | "roleId" | "status" | "createdAt" | "updatedAt" | "lastLoginAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "phone" | "userCode" | "email" | "admin" | "password" | "branchId" | "roleId" | "status" | "createdAt" | "updatedAt" | "lastLoginAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     branch?: boolean | User$branchArgs<ExtArgs>
     role?: boolean | RoleDefaultArgs<ExtArgs>
@@ -5685,6 +5694,7 @@ export namespace Prisma {
       phone: string | null
       userCode: string | null
       email: string
+      admin: boolean
       password: string
       branchId: string | null
       roleId: string
@@ -6088,6 +6098,7 @@ export namespace Prisma {
     readonly phone: FieldRef<"User", 'String'>
     readonly userCode: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
+    readonly admin: FieldRef<"User", 'Boolean'>
     readonly password: FieldRef<"User", 'String'>
     readonly branchId: FieldRef<"User", 'String'>
     readonly roleId: FieldRef<"User", 'String'>
@@ -33991,6 +34002,8 @@ export namespace Prisma {
     id: string | null
     invoiceNo: string | null
     saleStatus: $Enums.SaleStatus | null
+    locked: boolean | null
+    lockedAt: Date | null
     branchId: string | null
     customerId: string | null
     totalProducts: number | null
@@ -34011,6 +34024,8 @@ export namespace Prisma {
     id: string | null
     invoiceNo: string | null
     saleStatus: $Enums.SaleStatus | null
+    locked: boolean | null
+    lockedAt: Date | null
     branchId: string | null
     customerId: string | null
     totalProducts: number | null
@@ -34031,6 +34046,8 @@ export namespace Prisma {
     id: number
     invoiceNo: number
     saleStatus: number
+    locked: number
+    lockedAt: number
     branchId: number
     customerId: number
     totalProducts: number
@@ -34071,6 +34088,8 @@ export namespace Prisma {
     id?: true
     invoiceNo?: true
     saleStatus?: true
+    locked?: true
+    lockedAt?: true
     branchId?: true
     customerId?: true
     totalProducts?: true
@@ -34091,6 +34110,8 @@ export namespace Prisma {
     id?: true
     invoiceNo?: true
     saleStatus?: true
+    locked?: true
+    lockedAt?: true
     branchId?: true
     customerId?: true
     totalProducts?: true
@@ -34111,6 +34132,8 @@ export namespace Prisma {
     id?: true
     invoiceNo?: true
     saleStatus?: true
+    locked?: true
+    lockedAt?: true
     branchId?: true
     customerId?: true
     totalProducts?: true
@@ -34218,6 +34241,8 @@ export namespace Prisma {
     id: string
     invoiceNo: string
     saleStatus: $Enums.SaleStatus
+    locked: boolean
+    lockedAt: Date | null
     branchId: string | null
     customerId: string | null
     totalProducts: number
@@ -34257,6 +34282,8 @@ export namespace Prisma {
     id?: boolean
     invoiceNo?: boolean
     saleStatus?: boolean
+    locked?: boolean
+    lockedAt?: boolean
     branchId?: boolean
     customerId?: boolean
     totalProducts?: boolean
@@ -34286,6 +34313,8 @@ export namespace Prisma {
     id?: boolean
     invoiceNo?: boolean
     saleStatus?: boolean
+    locked?: boolean
+    lockedAt?: boolean
     branchId?: boolean
     customerId?: boolean
     totalProducts?: boolean
@@ -34302,7 +34331,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type SellOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceNo" | "saleStatus" | "branchId" | "customerId" | "totalProducts" | "subTotal" | "discount" | "vat" | "grandTotal" | "NetTotal" | "notes" | "saleDate" | "createdById" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["sell"]>
+  export type SellOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceNo" | "saleStatus" | "locked" | "lockedAt" | "branchId" | "customerId" | "totalProducts" | "subTotal" | "discount" | "vat" | "grandTotal" | "NetTotal" | "notes" | "saleDate" | "createdById" | "updatedById" | "createdAt" | "updatedAt", ExtArgs["result"]["sell"]>
   export type SellInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     branch?: boolean | Sell$branchArgs<ExtArgs>
     customer?: boolean | Sell$customerArgs<ExtArgs>
@@ -34327,6 +34356,8 @@ export namespace Prisma {
       id: string
       invoiceNo: string
       saleStatus: $Enums.SaleStatus
+      locked: boolean
+      lockedAt: Date | null
       branchId: string | null
       customerId: string | null
       totalProducts: number
@@ -34719,6 +34750,8 @@ export namespace Prisma {
     readonly id: FieldRef<"Sell", 'String'>
     readonly invoiceNo: FieldRef<"Sell", 'String'>
     readonly saleStatus: FieldRef<"Sell", 'SaleStatus'>
+    readonly locked: FieldRef<"Sell", 'Boolean'>
+    readonly lockedAt: FieldRef<"Sell", 'DateTime'>
     readonly branchId: FieldRef<"Sell", 'String'>
     readonly customerId: FieldRef<"Sell", 'String'>
     readonly totalProducts: FieldRef<"Sell", 'Int'>
@@ -45012,6 +45045,7 @@ export namespace Prisma {
     phone: 'phone',
     userCode: 'userCode',
     email: 'email',
+    admin: 'admin',
     password: 'password',
     branchId: 'branchId',
     roleId: 'roleId',
@@ -45391,6 +45425,8 @@ export namespace Prisma {
     id: 'id',
     invoiceNo: 'invoiceNo',
     saleStatus: 'saleStatus',
+    locked: 'locked',
+    lockedAt: 'lockedAt',
     branchId: 'branchId',
     customerId: 'customerId',
     totalProducts: 'totalProducts',
@@ -45995,6 +46031,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Status'
    */
   export type EnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status'>
@@ -46033,13 +46076,6 @@ export namespace Prisma {
    * Reference to a field of type 'Decimal'
    */
   export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
-    
-
-
-  /**
-   * Reference to a field of type 'Boolean'
-   */
-  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -46132,6 +46168,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"User"> | string | null
     userCode?: StringNullableFilter<"User"> | string | null
     email?: StringFilter<"User"> | string
+    admin?: BoolFilter<"User"> | boolean
     password?: StringFilter<"User"> | string
     branchId?: StringNullableFilter<"User"> | string | null
     roleId?: StringFilter<"User"> | string
@@ -46169,6 +46206,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     userCode?: SortOrderInput | SortOrder
     email?: SortOrder
+    admin?: SortOrder
     password?: SortOrder
     branchId?: SortOrderInput | SortOrder
     roleId?: SortOrder
@@ -46210,6 +46248,7 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     phone?: StringNullableFilter<"User"> | string | null
     userCode?: StringNullableFilter<"User"> | string | null
+    admin?: BoolFilter<"User"> | boolean
     password?: StringFilter<"User"> | string
     branchId?: StringNullableFilter<"User"> | string | null
     roleId?: StringFilter<"User"> | string
@@ -46247,6 +46286,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     userCode?: SortOrderInput | SortOrder
     email?: SortOrder
+    admin?: SortOrder
     password?: SortOrder
     branchId?: SortOrderInput | SortOrder
     roleId?: SortOrder
@@ -46268,6 +46308,7 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"User"> | string | null
     userCode?: StringNullableWithAggregatesFilter<"User"> | string | null
     email?: StringWithAggregatesFilter<"User"> | string
+    admin?: BoolWithAggregatesFilter<"User"> | boolean
     password?: StringWithAggregatesFilter<"User"> | string
     branchId?: StringNullableWithAggregatesFilter<"User"> | string | null
     roleId?: StringWithAggregatesFilter<"User"> | string
@@ -48436,6 +48477,8 @@ export namespace Prisma {
     id?: StringFilter<"Sell"> | string
     invoiceNo?: StringFilter<"Sell"> | string
     saleStatus?: EnumSaleStatusFilter<"Sell"> | $Enums.SaleStatus
+    locked?: BoolFilter<"Sell"> | boolean
+    lockedAt?: DateTimeNullableFilter<"Sell"> | Date | string | null
     branchId?: StringNullableFilter<"Sell"> | string | null
     customerId?: StringNullableFilter<"Sell"> | string | null
     totalProducts?: IntFilter<"Sell"> | number
@@ -48462,6 +48505,8 @@ export namespace Prisma {
     id?: SortOrder
     invoiceNo?: SortOrder
     saleStatus?: SortOrder
+    locked?: SortOrder
+    lockedAt?: SortOrderInput | SortOrder
     branchId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
     totalProducts?: SortOrder
@@ -48492,6 +48537,8 @@ export namespace Prisma {
     OR?: SellWhereInput[]
     NOT?: SellWhereInput | SellWhereInput[]
     saleStatus?: EnumSaleStatusFilter<"Sell"> | $Enums.SaleStatus
+    locked?: BoolFilter<"Sell"> | boolean
+    lockedAt?: DateTimeNullableFilter<"Sell"> | Date | string | null
     branchId?: StringNullableFilter<"Sell"> | string | null
     customerId?: StringNullableFilter<"Sell"> | string | null
     totalProducts?: IntFilter<"Sell"> | number
@@ -48518,6 +48565,8 @@ export namespace Prisma {
     id?: SortOrder
     invoiceNo?: SortOrder
     saleStatus?: SortOrder
+    locked?: SortOrder
+    lockedAt?: SortOrderInput | SortOrder
     branchId?: SortOrderInput | SortOrder
     customerId?: SortOrderInput | SortOrder
     totalProducts?: SortOrder
@@ -48546,6 +48595,8 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Sell"> | string
     invoiceNo?: StringWithAggregatesFilter<"Sell"> | string
     saleStatus?: EnumSaleStatusWithAggregatesFilter<"Sell"> | $Enums.SaleStatus
+    locked?: BoolWithAggregatesFilter<"Sell"> | boolean
+    lockedAt?: DateTimeNullableWithAggregatesFilter<"Sell"> | Date | string | null
     branchId?: StringNullableWithAggregatesFilter<"Sell"> | string | null
     customerId?: StringNullableWithAggregatesFilter<"Sell"> | string | null
     totalProducts?: IntWithAggregatesFilter<"Sell"> | number
@@ -49391,6 +49442,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -49426,6 +49478,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -49461,6 +49514,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49496,6 +49550,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -49531,6 +49586,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -49546,6 +49602,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49559,6 +49616,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -51812,6 +51870,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -51834,6 +51894,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -51856,6 +51918,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -51878,6 +51942,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -51900,6 +51966,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -51920,6 +51988,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -51936,6 +52006,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -52762,6 +52834,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type EnumStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.Status | EnumStatusFieldRefInput<$PrismaModel>
     in?: $Enums.Status[]
@@ -52928,6 +53005,7 @@ export namespace Prisma {
     phone?: SortOrder
     userCode?: SortOrder
     email?: SortOrder
+    admin?: SortOrder
     password?: SortOrder
     branchId?: SortOrder
     roleId?: SortOrder
@@ -52943,6 +53021,7 @@ export namespace Prisma {
     phone?: SortOrder
     userCode?: SortOrder
     email?: SortOrder
+    admin?: SortOrder
     password?: SortOrder
     branchId?: SortOrder
     roleId?: SortOrder
@@ -52958,6 +53037,7 @@ export namespace Prisma {
     phone?: SortOrder
     userCode?: SortOrder
     email?: SortOrder
+    admin?: SortOrder
     password?: SortOrder
     branchId?: SortOrder
     roleId?: SortOrder
@@ -53001,6 +53081,14 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type EnumStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -53874,11 +53962,6 @@ export namespace Prisma {
     not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
   }
 
-  export type BoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type SubCategoryNullableScalarRelationFilter = {
     is?: SubCategoryWhereInput | null
     isNot?: SubCategoryWhereInput | null
@@ -53990,14 +54073,6 @@ export namespace Prisma {
     _sum?: NestedDecimalNullableFilter<$PrismaModel>
     _min?: NestedDecimalNullableFilter<$PrismaModel>
     _max?: NestedDecimalNullableFilter<$PrismaModel>
-  }
-
-  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type FloatFilter<$PrismaModel = never> = {
@@ -54721,6 +54796,8 @@ export namespace Prisma {
     id?: SortOrder
     invoiceNo?: SortOrder
     saleStatus?: SortOrder
+    locked?: SortOrder
+    lockedAt?: SortOrder
     branchId?: SortOrder
     customerId?: SortOrder
     totalProducts?: SortOrder
@@ -54750,6 +54827,8 @@ export namespace Prisma {
     id?: SortOrder
     invoiceNo?: SortOrder
     saleStatus?: SortOrder
+    locked?: SortOrder
+    lockedAt?: SortOrder
     branchId?: SortOrder
     customerId?: SortOrder
     totalProducts?: SortOrder
@@ -54770,6 +54849,8 @@ export namespace Prisma {
     id?: SortOrder
     invoiceNo?: SortOrder
     saleStatus?: SortOrder
+    locked?: SortOrder
+    lockedAt?: SortOrder
     branchId?: SortOrder
     customerId?: SortOrder
     totalProducts?: SortOrder
@@ -55703,6 +55784,10 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
   }
 
   export type EnumStatusFieldUpdateOperationsInput = {
@@ -58249,10 +58334,6 @@ export namespace Prisma {
     decrement?: Decimal | DecimalJsLike | number | string
     multiply?: Decimal | DecimalJsLike | number | string
     divide?: Decimal | DecimalJsLike | number | string
-  }
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean
   }
 
   export type CategoryUpdateOneRequiredWithoutProductsNestedInput = {
@@ -61005,6 +61086,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedEnumStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.Status | EnumStatusFieldRefInput<$PrismaModel>
     in?: $Enums.Status[]
@@ -61090,6 +61176,14 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedEnumStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -61202,11 +61296,6 @@ export namespace Prisma {
     not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
   }
 
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
   export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
     in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
@@ -61221,14 +61310,6 @@ export namespace Prisma {
     _sum?: NestedDecimalNullableFilter<$PrismaModel>
     _min?: NestedDecimalNullableFilter<$PrismaModel>
     _max?: NestedDecimalNullableFilter<$PrismaModel>
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -61948,6 +62029,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -61969,6 +62052,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -62000,6 +62085,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -62021,6 +62108,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -62734,6 +62823,8 @@ export namespace Prisma {
     id?: StringFilter<"Sell"> | string
     invoiceNo?: StringFilter<"Sell"> | string
     saleStatus?: EnumSaleStatusFilter<"Sell"> | $Enums.SaleStatus
+    locked?: BoolFilter<"Sell"> | boolean
+    lockedAt?: DateTimeNullableFilter<"Sell"> | Date | string | null
     branchId?: StringNullableFilter<"Sell"> | string | null
     customerId?: StringNullableFilter<"Sell"> | string | null
     totalProducts?: IntFilter<"Sell"> | number
@@ -62977,6 +63068,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -63011,6 +63103,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     status?: $Enums.Status
@@ -63101,6 +63194,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"User"> | string | null
     userCode?: StringNullableFilter<"User"> | string | null
     email?: StringFilter<"User"> | string
+    admin?: BoolFilter<"User"> | boolean
     password?: StringFilter<"User"> | string
     branchId?: StringNullableFilter<"User"> | string | null
     roleId?: StringFilter<"User"> | string
@@ -63346,6 +63440,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -63380,6 +63475,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     roleId: string
     status?: $Enums.Status
@@ -63422,6 +63518,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -63443,6 +63541,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     customerId?: string | null
     totalProducts?: number
     subTotal?: number
@@ -64007,6 +64107,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -64041,6 +64142,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -64870,6 +64972,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -64904,6 +65007,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -65880,6 +65984,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -65914,6 +66019,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -66150,6 +66256,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -66184,6 +66291,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -66218,6 +66326,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -66252,6 +66361,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -66302,6 +66412,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -66336,6 +66447,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -66368,6 +66480,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -66389,6 +66503,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     totalProducts?: number
     subTotal?: number
@@ -68954,6 +69070,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -68988,6 +69105,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -69027,6 +69145,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -69061,6 +69180,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -69273,6 +69393,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69307,6 +69428,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -69352,6 +69474,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69386,6 +69509,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -69988,6 +70112,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -70022,6 +70147,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -70061,6 +70187,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -70095,6 +70222,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -70403,6 +70531,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70437,6 +70566,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -70482,6 +70612,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70516,6 +70647,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -71132,6 +71264,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -71166,6 +71299,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -71205,6 +71339,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -71239,6 +71374,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -71509,6 +71645,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71543,6 +71680,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -71588,6 +71726,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -71622,6 +71761,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -72112,6 +72252,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -72146,6 +72287,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -72185,6 +72327,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -72219,6 +72362,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -72423,6 +72567,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -72457,6 +72602,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -72502,6 +72648,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -72536,6 +72683,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -72600,6 +72748,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -72621,6 +72771,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -72813,6 +72965,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -72834,6 +72988,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -73192,6 +73348,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -73226,6 +73383,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -73333,6 +73491,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -73367,6 +73526,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -73406,6 +73566,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -73440,6 +73601,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -73570,6 +73732,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73604,6 +73767,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -73729,6 +73893,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73763,6 +73928,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -73808,6 +73974,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73842,6 +74009,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -74326,6 +74494,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -74360,6 +74529,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -74631,6 +74801,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -74665,6 +74836,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -74704,6 +74876,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -74738,6 +74911,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -74788,6 +74962,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74822,6 +74997,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -75135,6 +75311,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75169,6 +75346,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -75214,6 +75392,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75248,6 +75427,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -75280,6 +75460,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     totalProducts?: number
     subTotal?: number
     discount?: number
@@ -75301,6 +75483,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -75329,6 +75513,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -75363,6 +75548,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -75402,6 +75588,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     status?: $Enums.Status
     createdAt?: Date | string
@@ -75436,6 +75623,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     roleId: string
@@ -75520,6 +75708,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -75541,6 +75731,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -75575,6 +75767,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75609,6 +75802,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -75654,6 +75848,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75688,6 +75883,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -76585,6 +76781,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -76604,6 +76802,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     customerId?: string | null
     totalProducts?: number
@@ -77209,6 +77409,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -77230,6 +77432,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -77251,6 +77455,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -77270,6 +77476,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -77291,6 +77499,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -77312,6 +77522,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
@@ -77689,6 +77901,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     branchId?: string | null
     status?: $Enums.Status
@@ -77724,6 +77937,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77758,6 +77972,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
@@ -77792,6 +78007,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
@@ -77848,6 +78064,7 @@ export namespace Prisma {
     phone?: string | null
     userCode?: string | null
     email: string
+    admin?: boolean
     password: string
     roleId: string
     status?: $Enums.Status
@@ -77860,6 +78077,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     customerId?: string | null
     totalProducts?: number
     subTotal?: number
@@ -77994,6 +78213,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78028,6 +78248,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     roleId?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
@@ -78062,6 +78283,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     roleId?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
@@ -78074,6 +78296,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -78095,6 +78319,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
@@ -78116,6 +78342,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     customerId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
@@ -78732,6 +78960,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78766,6 +78995,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -78800,6 +79030,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -79410,6 +79641,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     status?: EnumStatusFieldUpdateOperationsInput | $Enums.Status
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -79444,6 +79676,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -79478,6 +79711,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     userCode?: NullableStringFieldUpdateOperationsInput | string | null
     email?: StringFieldUpdateOperationsInput | string
+    admin?: BoolFieldUpdateOperationsInput | boolean
     password?: StringFieldUpdateOperationsInput | string
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     roleId?: StringFieldUpdateOperationsInput | string
@@ -79530,6 +79764,8 @@ export namespace Prisma {
     id?: string
     invoiceNo: string
     saleStatus?: $Enums.SaleStatus
+    locked?: boolean
+    lockedAt?: Date | string | null
     branchId?: string | null
     totalProducts?: number
     subTotal?: number
@@ -79578,6 +79814,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
     discount?: FloatFieldUpdateOperationsInput | number
@@ -79599,6 +79837,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number
@@ -79620,6 +79860,8 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     invoiceNo?: StringFieldUpdateOperationsInput | string
     saleStatus?: EnumSaleStatusFieldUpdateOperationsInput | $Enums.SaleStatus
+    locked?: BoolFieldUpdateOperationsInput | boolean
+    lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
     totalProducts?: IntFieldUpdateOperationsInput | number
     subTotal?: FloatFieldUpdateOperationsInput | number

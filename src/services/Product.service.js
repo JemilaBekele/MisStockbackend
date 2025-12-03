@@ -23,21 +23,88 @@ const getProductById = async (id) => {
   });
   return product;
 };
-const getAllProducts = async () => {
-  // First, get all shops and stores to map their names
+const getAllProducts = async (userId) => {
+  // First, get the user with their accessible shops and stores
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      shops: {
+        select: { id: true },
+      },
+      stores: {
+        select: { id: true },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Get only the shops and stores the user has access to
+  const accessibleShopIds = user.shops.map((shop) => shop.id);
+  const accessibleStoreIds = user.stores.map((store) => store.id);
+
+  // Get shops and stores the user can access with branch information
   const [shops, stores] = await Promise.all([
     prisma.shop.findMany({
-      select: { id: true, name: true },
+      where: {
+        id: { in: accessibleShopIds },
+      },
+      select: {
+        id: true,
+        name: true,
+        branch: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     }),
     prisma.store.findMany({
-      select: { id: true, name: true },
+      where: {
+        id: { in: accessibleStoreIds },
+      },
+      select: {
+        id: true,
+        name: true,
+        branch: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     }),
   ]);
 
+  // Create maps for shop and store names including branch info
   const shopMap = Object.fromEntries(shops.map((shop) => [shop.id, shop.name]));
   const storeMap = Object.fromEntries(
     stores.map((store) => [store.id, store.name]),
   );
+
+  // Create maps for shop and store branch info
+  // const shopBranchMap = Object.fromEntries(
+  //   shops.map((shop) => [
+  //     shop.id,
+  //     {
+  //       branchId: shop.branch?.id,
+  //       branchName: shop.branch?.name,
+  //     },
+  //   ]),
+  // );
+
+  // const storeBranchMap = Object.fromEntries(
+  //   stores.map((store) => [
+  //     store.id,
+  //     {
+  //       branchId: store.branch?.id,
+  //       branchName: store.branch?.name,
+  //     },
+  //   ]),
+  // );
 
   // Get all products with their stock information
   const products = await prisma.product.findMany({
@@ -49,7 +116,6 @@ const getAllProducts = async () => {
       subCategory: true,
       unitOfMeasure: true,
       AdditionalPrice: {
-        // ✅ Include additional prices
         include: {
           shop: true,
         },
@@ -57,7 +123,10 @@ const getAllProducts = async () => {
       batches: {
         include: {
           ShopStock: {
-            where: { status: 'Available' }, // Only include available stock
+            where: {
+              status: 'Available',
+              shopId: { in: accessibleShopIds }, // Filter by accessible shops
+            },
             include: {
               shop: {
                 select: { id: true, name: true },
@@ -65,7 +134,10 @@ const getAllProducts = async () => {
             },
           },
           StoreStock: {
-            where: { status: 'Available' }, // Only include available stock
+            where: {
+              status: 'Available',
+              storeId: { in: accessibleStoreIds }, // Filter by accessible stores
+            },
             include: {
               store: {
                 select: { id: true, name: true },
@@ -85,12 +157,12 @@ const getAllProducts = async () => {
     let totalShopStock = 0;
     let totalStoreStock = 0;
 
-    // Initialize all shops with 0 quantity
+    // Initialize only accessible shops with 0 quantity
     shops.forEach((shop) => {
       shopStocks[shop.name] = 0;
     });
 
-    // Initialize all stores with 0 quantity
+    // Initialize only accessible stores with 0 quantity
     stores.forEach((store) => {
       storeStocks[store.name] = 0;
     });
@@ -100,17 +172,52 @@ const getAllProducts = async () => {
       // Process shop stock
       batch.ShopStock.forEach((shopStock) => {
         const shopName = shopMap[shopStock.shopId];
-        shopStocks[shopName] = (shopStocks[shopName] || 0) + shopStock.quantity;
-        totalShopStock += shopStock.quantity;
+        if (shopName) {
+          // Only count if shop is accessible
+          shopStocks[shopName] =
+            (shopStocks[shopName] || 0) + shopStock.quantity;
+          totalShopStock += shopStock.quantity;
+        }
       });
 
       // Process store stock
       batch.StoreStock.forEach((storeStock) => {
         const storeName = storeMap[storeStock.storeId];
-        storeStocks[storeName] =
-          (storeStocks[storeName] || 0) + storeStock.quantity;
-        totalStoreStock += storeStock.quantity;
+        if (storeName) {
+          // Only count if store is accessible
+          storeStocks[storeName] =
+            (storeStocks[storeName] || 0) + storeStock.quantity;
+          totalStoreStock += storeStock.quantity;
+        }
       });
+    });
+
+    // Convert shopStocks to include branch info
+    const shopStocksWithBranch = {};
+    Object.entries(shopStocks).forEach(([shopName, quantity]) => {
+      // Find the shop to get branch info
+      const shop = shops.find((s) => s.name === shopName);
+      if (shop) {
+        shopStocksWithBranch[shopName] = {
+          quantity,
+          branchId: shop.branch?.id,
+          branchName: shop.branch?.name,
+        };
+      }
+    });
+
+    // Convert storeStocks to include branch info
+    const storeStocksWithBranch = {};
+    Object.entries(storeStocks).forEach(([storeName, quantity]) => {
+      // Find the store to get branch info
+      const store = stores.find((s) => s.name === storeName);
+      if (store) {
+        storeStocksWithBranch[storeName] = {
+          quantity,
+          branchId: store.branch?.id,
+          branchName: store.branch?.name,
+        };
+      }
     });
 
     const totalStock = totalShopStock + totalStoreStock;
@@ -118,8 +225,8 @@ const getAllProducts = async () => {
     return {
       ...product,
       stockSummary: {
-        shopStocks, // Object with shop names as keys and quantities as values
-        storeStocks, // Object with store names as keys and quantities as values
+        shopStocks: shopStocksWithBranch, // Object with shop names as keys and { quantity, branchId, branchName } as values
+        storeStocks: storeStocksWithBranch, // Object with store names as keys and { quantity, branchId, branchName } as values
         totalShopStock,
         totalStoreStock,
         totalStock,
@@ -133,16 +240,18 @@ const getAllProducts = async () => {
       // Calculate shop-wise totals
       const shopTotals = { ...totals.shopTotals };
       Object.entries(product.stockSummary.shopStocks).forEach(
-        ([shopName, quantity]) => {
-          shopTotals[shopName] = (shopTotals[shopName] || 0) + quantity;
+        ([shopName, stockInfo]) => {
+          shopTotals[shopName] =
+            (shopTotals[shopName] || 0) + stockInfo.quantity;
         },
       );
 
       // Calculate store-wise totals
       const storeTotals = { ...totals.storeTotals };
       Object.entries(product.stockSummary.storeStocks).forEach(
-        ([storeName, quantity]) => {
-          storeTotals[storeName] = (storeTotals[storeName] || 0) + quantity;
+        ([storeName, stockInfo]) => {
+          storeTotals[storeName] =
+            (storeTotals[storeName] || 0) + stockInfo.quantity;
         },
       );
 
@@ -174,7 +283,6 @@ const getAllProducts = async () => {
   return {
     products: productsWithTotals,
     count: products.length,
-    // overallTotals removed from here
   };
 };
 const getActiveAllProducts = async (filter = {}, includeInactive = false) => {
@@ -657,315 +765,404 @@ const createProductBatchsingle = async (productBatchBody) => {
 
   return productBatch;
 };
-const getProductDetails = async (productId) => {
-  // Get the product with related data
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    include: {
-      category: {
-        select: {
-          id: true,
-          name: true,
-        },
+const getProductDetails = async (productId, userId) => {
+  try {
+    // Get the user's accessible shops and stores
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        shops: { select: { id: true } },
+        stores: { select: { id: true } },
       },
-      subCategory: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      unitOfMeasure: true,
-      AdditionalPrice: {
-        include: {
-          shop: {
-            include: {
-              branch: true,
-            },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const accessibleShopIds = user.shops.map((shop) => shop.id);
+    const accessibleStoreIds = user.stores.map((store) => store.id);
+
+    // If user has no shops or stores, return empty arrays
+    if (accessibleShopIds.length === 0 && accessibleStoreIds.length === 0) {
+      throw new Error('User has no shop or store access');
+    }
+
+    const shopStockWhere =
+      accessibleShopIds.length > 0
+        ? { status: 'Available', shopId: { in: accessibleShopIds } }
+        : { status: 'Available', shopId: { in: [] } };
+
+    const storeStockWhere =
+      accessibleStoreIds.length > 0
+        ? { status: 'Available', storeId: { in: accessibleStoreIds } }
+        : { status: 'Available', storeId: { in: [] } };
+
+    // Get the product with related data
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-      },
-      batches: {
-        include: {
-          store: {
-            include: {
-              branch: true,
-            },
+        subCategory: {
+          select: {
+            id: true,
+            name: true,
           },
-          ShopStock: {
-            include: {
-              shop: {
-                include: {
-                  branch: true,
-                },
+        },
+        unitOfMeasure: true,
+        AdditionalPrice: {
+          where: {
+            OR: [
+              { shopId: null }, // Global additional prices
+              { shopId: { in: accessibleShopIds } }, // Shop-specific prices
+            ],
+          },
+          include: {
+            shop: {
+              include: {
+                branch: true,
               },
-              unitOfMeasure: true,
             },
           },
-          StoreStock: {
-            include: {
-              store: {
-                include: {
-                  branch: true,
-                },
+        },
+        batches: {
+          include: {
+            store: {
+              include: {
+                branch: true,
               },
-              unitOfMeasure: true,
+            },
+            ShopStock: {
+              where: shopStockWhere,
+              include: {
+                shop: {
+                  include: {
+                    branch: true,
+                  },
+                },
+                unitOfMeasure: true,
+              },
+            },
+            StoreStock: {
+              where: storeStockWhere,
+              include: {
+                store: {
+                  include: {
+                    branch: true,
+                  },
+                },
+                unitOfMeasure: true,
+              },
             },
           },
-        },
-        orderBy: {
-          createdAt: 'desc',
+          orderBy: {
+            createdAt: 'desc',
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!product) {
-    throw new Error('Product not found');
-  }
-
-  // Get stock ledger entries for this product
-  const stockLedgers = await prisma.stockLedger.findMany({
-    where: {
-      batch: {
+    if (!product) {
+      throw new Error('Product not found');
+    }
+    const additionalPrices = await prisma.additionalPrice.findMany({
+      where: {
         productId,
+        OR: [
+          { shopId: null }, // Global additional prices
+          { shopId: { in: accessibleShopIds } }, // Shop-specific prices
+        ],
       },
-    },
-    include: {
-      batch: true,
-      unitOfMeasure: true,
-      store: {
-        include: {
-          branch: true,
+      include: {
+        shop: {
+          include: {
+            branch: true,
+          },
         },
       },
-      shop: {
-        include: {
-          branch: true,
+    });
+    // Get stock ledger entries for this product (filtered by accessible shops/stores)
+    const stockLedgers = await prisma.stockLedger.findMany({
+      where: {
+        batch: {
+          productId,
+        },
+        OR: [
+          { storeId: { in: accessibleStoreIds } },
+          { shopId: { in: accessibleShopIds } },
+        ],
+      },
+      include: {
+        batch: true,
+        unitOfMeasure: true,
+        store: {
+          include: {
+            branch: true,
+          },
+        },
+        shop: {
+          include: {
+            branch: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
         },
       },
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
+      orderBy: {
+        movementDate: 'desc',
+      },
+    });
+
+    // Calculate total quantities across accessible stores and shops
+    const storeStocks = await prisma.storeStock.groupBy({
+      by: ['storeId'],
+      where: {
+        batch: {
+          productId,
+        },
+        status: 'Available',
+        storeId: { in: accessibleStoreIds },
+      },
+      _sum: {
+        quantity: true,
+      },
+    });
+
+    const shopStocks = await prisma.shopStock.groupBy({
+      by: ['shopId'],
+      where: {
+        batch: {
+          productId,
+        },
+        status: 'Available',
+        shopId: { in: accessibleShopIds },
+      },
+      _sum: {
+        quantity: true,
+      },
+    });
+
+    // Get store and shop details (only accessible ones)
+    const storeIds = storeStocks.map((stock) => stock.storeId);
+    const shopIds = shopStocks.map((stock) => stock.shopId);
+
+    const stores = await prisma.store.findMany({
+      where: {
+        id: {
+          in: storeIds.length > 0 ? storeIds : [],
         },
       },
-    },
-    orderBy: {
-      movementDate: 'desc',
-    },
-  });
+      include: { branch: true },
+    });
 
-  // Calculate total quantities across all stores and shops
-  const storeStocks = await prisma.storeStock.groupBy({
-    by: ['storeId'],
-    where: {
-      batch: {
-        productId,
+    const shops = await prisma.shop.findMany({
+      where: {
+        id: {
+          in: shopIds.length > 0 ? shopIds : [],
+        },
       },
-      status: 'Available',
-    },
-    _sum: {
-      quantity: true,
-    },
-  });
+      include: { branch: true },
+    });
 
-  const shopStocks = await prisma.shopStock.groupBy({
-    by: ['shopId'],
-    where: {
-      batch: {
-        productId,
-      },
-      status: 'Available',
-    },
-    _sum: {
-      quantity: true,
-    },
-  });
+    // Create location stock details
+    const storeStockDetails = storeStocks.map((stock) => {
+      const store = stores.find((s) => s.id === stock.storeId);
+      return {
+        storeId: stock.storeId,
+        storeName: store?.name || 'Unknown Store',
+        branchId: store?.branch?.id,
+        branchName: store?.branch?.name,
+        quantity: stock._sum.quantity || 0,
+        type: 'store',
+        additionalPrice: null, // Stores don't have additional prices
+      };
+    });
 
-  // Get store and shop details
-  const storeIds = storeStocks.map((stock) => stock.storeId);
-  const shopIds = shopStocks.map((stock) => stock.shopId);
+    const shopStockDetails = shopStocks.map((stock) => {
+      const shop = shops.find((s) => s.id === stock.shopId);
+      // Find additional price for this shop
+      const additionalPrice = additionalPrices.find(
+        (price) => price.shopId === stock.shopId,
+      );
+      // Find global additional price (shopId = null)
+      const globalAdditionalPrice = additionalPrices.find(
+        (price) => price.shopId === null,
+      );
 
-  const stores = await prisma.store.findMany({
-    where: { id: { in: storeIds } },
-    include: { branch: true },
-  });
+      return {
+        shopId: stock.shopId,
+        shopName: shop?.name || 'Unknown Shop',
+        branchId: shop?.branch?.id,
+        branchName: shop?.branch?.name,
+        quantity: stock._sum.quantity || 0,
+        type: 'shop',
+        additionalPrice: additionalPrice || globalAdditionalPrice, // Shop-specific or global
+      };
+    });
 
-  const shops = await prisma.shop.findMany({
-    where: { id: { in: shopIds } },
-    include: { branch: true },
-  });
+    // Process batches with detailed information
+    const processedBatches = product.batches.map((batch) => {
+      const batchStoreQuantity = batch.StoreStock.filter(
+        (stock) => stock.status === 'Available',
+      ).reduce((total, stock) => total + stock.quantity, 0);
 
-  // Create location stock details
-  const storeStockDetails = storeStocks.map((stock) => {
-    const store = stores.find((s) => s.id === stock.storeId);
-    return {
-      storeId: stock.storeId,
-      storeName: store?.name || 'Unknown Store',
-      branchId: store?.branch?.id,
-      branchName: store?.branch?.name,
-      quantity: stock._sum.quantity || 0,
-      type: 'store',
-    };
-  });
+      const batchShopQuantity = batch.ShopStock.filter(
+        (stock) => stock.status === 'Available',
+      ).reduce((total, stock) => total + stock.quantity, 0);
 
-  const shopStockDetails = shopStocks.map((stock) => {
-    const shop = shops.find((s) => s.id === stock.shopId);
-    return {
-      shopId: stock.shopId,
-      shopName: shop?.name || 'Unknown Shop',
-      branchId: shop?.branch?.id,
-      branchName: shop?.branch?.name,
-      quantity: stock._sum.quantity || 0,
-      type: 'shop',
-    };
-  });
+      const batchTotalQuantity = batchStoreQuantity + batchShopQuantity;
 
-  // Process batches with detailed information
-  const processedBatches = product.batches.map((batch) => {
-    const batchStoreQuantity = batch.StoreStock.filter(
-      (stock) => stock.status === 'Available',
-    ).reduce((total, stock) => total + stock.quantity, 0);
+      return {
+        id: batch.id,
+        batchNumber: batch.batchNumber,
+        expiryDate: batch.expiryDate,
+        price: batch.price,
+        stock: batch.stock,
+        warningQuantity: batch.warningQuantity,
+        storeId: batch.storeId,
+        store:
+          batch.store && accessibleStoreIds.includes(batch.storeId)
+            ? {
+                id: batch.store.id,
+                name: batch.store.name,
+                branch: batch.store.branch,
+              }
+            : null,
+        shopStocks: batch.ShopStock.map((stock) => ({
+          id: stock.id,
+          shopId: stock.shopId,
+          shopName: stock.shop?.name,
+          branchId: stock.shop?.branch?.id,
+          branchName: stock.shop?.branch?.name,
+          quantity: stock.quantity,
+          status: stock.status,
+          unitOfMeasure: stock.unitOfMeasure,
+        })),
+        storeStocks: batch.StoreStock.map((stock) => ({
+          id: stock.id,
+          storeId: stock.storeId,
+          storeName: stock.store?.name,
+          branchId: stock.store?.branch?.id,
+          branchName: stock.store?.branch?.name,
+          quantity: stock.quantity,
+          status: stock.status,
+          unitOfMeasure: stock.unitOfMeasure,
+        })),
+        batchStoreQuantity,
+        batchShopQuantity,
+        batchTotalQuantity,
+        createdAt: batch.createdAt,
+        updatedAt: batch.updatedAt,
+      };
+    });
 
-    const batchShopQuantity = batch.ShopStock.filter(
-      (stock) => stock.status === 'Available',
-    ).reduce((total, stock) => total + stock.quantity, 0);
+    // Process additional prices (filtered by accessible shops)
+    const processedAdditionalPrices = product.AdditionalPrice.filter(
+      (price) => !price.shopId || accessibleShopIds.includes(price.shopId),
+    ).map((price) => ({
+      id: price.id,
+      label: price.label,
+      price: price.price,
+      shopId: price.shopId,
+      shopName: price.shop?.name,
+      branchId: price.shop?.branch?.id,
+      branchName: price.shop?.branch?.name,
+    }));
 
-    const batchTotalQuantity = batchStoreQuantity + batchShopQuantity;
-
-    return {
-      id: batch.id,
-      batchNumber: batch.batchNumber,
-      expiryDate: batch.expiryDate,
-      price: batch.price,
-      stock: batch.stock,
-      warningQuantity: batch.warningQuantity,
-      storeId: batch.storeId,
-      store: batch.store
+    // Process stock ledger entries (already filtered)
+    const processedStockLedgers = stockLedgers.map((ledger) => ({
+      id: ledger.id,
+      invoiceNo: ledger.invoiceNo,
+      movementType: ledger.movementType,
+      quantity: ledger.quantity,
+      unitOfMeasure: ledger.unitOfMeasure,
+      reference: ledger.reference,
+      userId: ledger.userId,
+      user: ledger.user,
+      store:
+        ledger.store && accessibleStoreIds.includes(ledger.store.id)
+          ? {
+              id: ledger.store.id,
+              name: ledger.store.name,
+              branch: ledger.store.branch,
+            }
+          : null,
+      shop:
+        ledger.shop && accessibleShopIds.includes(ledger.shop.id)
+          ? {
+              id: ledger.shop.id,
+              name: ledger.shop.name,
+              branch: ledger.shop.branch,
+            }
+          : null,
+      batch: ledger.batch
         ? {
-            id: batch.store.id,
-            name: batch.store.name,
-            branch: batch.store.branch,
+            id: ledger.batch.id,
+            batchNumber: ledger.batch.batchNumber,
           }
         : null,
-      shopStocks: batch.ShopStock.map((stock) => ({
-        id: stock.id,
-        shopId: stock.shopId,
-        shopName: stock.shop?.name,
-        branchId: stock.shop?.branch?.id,
-        branchName: stock.shop?.branch?.name,
-        quantity: stock.quantity,
-        status: stock.status,
-        unitOfMeasure: stock.unitOfMeasure,
-      })),
-      storeStocks: batch.StoreStock.map((stock) => ({
-        id: stock.id,
-        storeId: stock.storeId,
-        storeName: stock.store?.name,
-        branchId: stock.store?.branch?.id,
-        branchName: stock.store?.branch?.name,
-        quantity: stock.quantity,
-        status: stock.status,
-        unitOfMeasure: stock.unitOfMeasure,
-      })),
-      batchStoreQuantity,
-      batchShopQuantity,
-      batchTotalQuantity,
-      createdAt: batch.createdAt,
-      updatedAt: batch.updatedAt,
+      notes: ledger.notes,
+      movementDate: ledger.movementDate,
+      createdAt: ledger.createdAt,
+      updatedAt: ledger.updatedAt,
+    }));
+
+    // Calculate total quantities (only from accessible locations)
+    const totalStoreQuantity = storeStockDetails.reduce(
+      (total, store) => total + store.quantity,
+      0,
+    );
+    const totalShopQuantity = shopStockDetails.reduce(
+      (total, shop) => total + shop.quantity,
+      0,
+    );
+    const overallTotalQuantity = totalStoreQuantity + totalShopQuantity;
+
+    return {
+      product: {
+        id: product.id,
+        productCode: product.productCode,
+        name: product.name,
+        generic: product.generic,
+        description: product.description,
+        sellPrice: product.sellPrice,
+        imageUrl: product.imageUrl,
+        category: product.category,
+        subCategory: product.subCategory,
+        unitOfMeasure: product.unitOfMeasure,
+        isActive: product.isActive,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      },
+      batches: processedBatches,
+      additionalPrices: processedAdditionalPrices,
+      stockLedgers: processedStockLedgers,
+      locationStocks: [...storeStockDetails, ...shopStockDetails],
+      summary: {
+        totalStoreQuantity,
+        totalShopQuantity,
+        overallTotalQuantity,
+        batchCount: processedBatches.length,
+        storeCount: storeStockDetails.length,
+        shopCount: shopStockDetails.length,
+        ledgerCount: processedStockLedgers.length,
+        additionalPriceCount: processedAdditionalPrices.length,
+      },
     };
-  });
-
-  // Process additional prices (now at product level)
-  const processedAdditionalPrices = product.AdditionalPrice.map((price) => ({
-    id: price.id,
-    label: price.label,
-    price: price.price,
-    shopId: price.shopId,
-    shopName: price.shop?.name,
-    branchId: price.shop?.branch?.id,
-    branchName: price.shop?.branch?.name,
-  }));
-
-  // Process stock ledger entries
-  const processedStockLedgers = stockLedgers.map((ledger) => ({
-    id: ledger.id,
-    invoiceNo: ledger.invoiceNo,
-    movementType: ledger.movementType,
-    quantity: ledger.quantity,
-    unitOfMeasure: ledger.unitOfMeasure,
-    reference: ledger.reference,
-    userId: ledger.userId,
-    user: ledger.user,
-    store: ledger.store
-      ? {
-          id: ledger.store.id,
-          name: ledger.store.name,
-          branch: ledger.store.branch,
-        }
-      : null,
-    shop: ledger.shop
-      ? {
-          id: ledger.shop.id,
-          name: ledger.shop.name,
-          branch: ledger.shop.branch,
-        }
-      : null,
-    batch: ledger.batch
-      ? {
-          id: ledger.batch.id,
-          batchNumber: ledger.batch.batchNumber,
-        }
-      : null,
-    notes: ledger.notes,
-    movementDate: ledger.movementDate,
-    createdAt: ledger.createdAt,
-    updatedAt: ledger.updatedAt,
-  }));
-
-  // Calculate total quantities
-  const totalStoreQuantity = storeStockDetails.reduce(
-    (total, store) => total + store.quantity,
-    0,
-  );
-  const totalShopQuantity = shopStockDetails.reduce(
-    (total, shop) => total + shop.quantity,
-    0,
-  );
-  const overallTotalQuantity = totalStoreQuantity + totalShopQuantity;
-
-  return {
-    product: {
-      id: product.id,
-      productCode: product.productCode,
-      name: product.name,
-      generic: product.generic,
-      description: product.description,
-      sellPrice: product.sellPrice,
-      imageUrl: product.imageUrl,
-      category: product.category,
-      subCategory: product.subCategory,
-      unitOfMeasure: product.unitOfMeasure,
-      isActive: product.isActive,
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
-    },
-    batches: processedBatches,
-    additionalPrices: processedAdditionalPrices,
-    stockLedgers: processedStockLedgers,
-    locationStocks: [...storeStockDetails, ...shopStockDetails],
-    summary: {
-      totalStoreQuantity,
-      totalShopQuantity,
-      overallTotalQuantity,
-      batchCount: product.batches.length,
-      storeCount: storeStockDetails.length,
-      shopCount: shopStockDetails.length,
-      ledgerCount: stockLedgers.length,
-      additionalPriceCount: product.AdditionalPrice.length,
-    },
-  };
+  } catch (error) {
+    console.error('Error in getProductDetails:', error);
+    throw error;
+  }
 };
 const getProductBatchesByShops = async (productId) => {
   // Get all available shop stocks for the product
@@ -1297,12 +1494,6 @@ function processProductResults(products) {
     };
   });
 
-  console.log('✅ Final processed products:', productResults.length);
-  console.log(
-    '📊 Final product names:',
-    productResults.map((p) => p.product.name),
-  );
-
   return {
     products: productResults,
     count: productResults.length,
@@ -1371,15 +1562,8 @@ const searchProducts = async (
     },
   });
 
-  console.log('📦 All active products found:', allProducts.length);
-  console.log(
-    '🏷️ All product names:',
-    allProducts.map((p) => p.name),
-  );
-
   // If no search term, return all filtered products
   if (!searchTerm) {
-    console.log('ℹ️ No search term, returning all products');
     return processProductResults(allProducts);
   }
 
@@ -1425,25 +1609,8 @@ const searchProducts = async (
       categoryMatch ||
       subCategoryMatch;
 
-    if (matches) {
-      console.log(`✅ Match found: ${product.name}`, {
-        nameMatch,
-        genericMatch,
-        codeMatch,
-        categoryMatch,
-        subCategoryMatch,
-        generic: product.generic,
-      });
-    }
-
     return matches;
   });
-
-  console.log('✅ Filtered products:', filteredProducts.length);
-  console.log(
-    '🏷️ Filtered product names:',
-    filteredProducts.map((p) => p.name),
-  );
 
   return processProductResults(filteredProducts);
 };
@@ -1474,7 +1641,6 @@ const getTopSellingProducts = async (
     });
     userAccessibleShopIds = userWithShops?.shops.map((shop) => shop.id) || [];
   }
-
 
   // Build the shop filter condition
   const shopFilterCondition = userId

@@ -19,6 +19,7 @@ model User {
   phone       String?     @map("phone")
   userCode    String? 
   email       String      @unique
+  admin       Boolean     @default(false)
   password    String
   branchId    String?
   branch      Branch?      @relation(fields: [branchId], references: [id])
@@ -676,7 +677,8 @@ model Sell {
   id             String          @id @default(uuid()) @map("_id") @db.Char(36)
   invoiceNo      String          @unique
   saleStatus     SaleStatus      @default(NOT_APPROVED)
-
+ locked         Boolean         @default(false)
+ lockedAt       DateTime?
   branchId       String?
   branch         Branch ?         @relation(fields: [branchId], references: [id])
 

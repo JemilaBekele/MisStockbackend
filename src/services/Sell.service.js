@@ -4,9 +4,11 @@ const { getIO } = require('../socket/s');
 const ApiError = require('../utils/ApiError');
 const prisma = require('./prisma');
 
-const getSellById = async (id) => {
-  const sell = await prisma.sell.findUnique({
-    where: { id },
+const getSellById = async (identifier) => {
+  const sell = await prisma.sell.findFirst({
+    where: {
+      OR: [{ id: identifier }, { invoiceNo: identifier }],
+    },
     include: {
       branch: true,
       customer: true,
@@ -24,7 +26,7 @@ const getSellById = async (id) => {
           unitOfMeasure: true,
           batches: {
             include: {
-              batch: true, // Just include the batch relation directly
+              batch: true,
             },
           },
         },
@@ -33,7 +35,6 @@ const getSellById = async (id) => {
   });
   return sell;
 };
-
 const getSellByIdByuser = async (id, userId = null) => {
   // Get the sell with all items first
   const sell = await prisma.sell.findUnique({
@@ -62,6 +63,37 @@ const getSellByIdByuser = async (id, userId = null) => {
       },
     },
   });
+  const existingSell = await prisma.sell.findUnique({
+    where: { id },
+    select: { locked: true, lockedAt: true },
+  });
+
+  // If record is unlocked (false), check time validity
+  if (existingSell && existingSell.locked === false) {
+    // Case 1: lockedAt is missing → lock immediately
+    if (!existingSell.lockedAt) {
+      return prisma.sell.update({
+        where: { id },
+        data: {
+          locked: true,
+          lockedAt: new Date(),
+        },
+      });
+    }
+
+    // Case 2: lockedAt exists → check 20 minutes rule
+    const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
+
+    if (existingSell.lockedAt < twentyMinutesAgo) {
+      return prisma.sell.update({
+        where: { id },
+        data: {
+          locked: true,
+          lockedAt: new Date(),
+        },
+      });
+    }
+  }
 
   if (!sell) return null;
 
@@ -598,8 +630,17 @@ const updateSell = async (sellId, sellBody, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Sale not found');
   }
 
+  // ✅ DON'T UPDATE IF LOCK IS TRUE
+  if (existingSell.locked === true) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot update locked sale');
+  }
+
   // Cannot update delivered or cancelled sells
-  if (['DELIVERED', 'CANCELLED'].includes(existingSell.saleStatus)) {
+  if (
+    ['DELIVERED', 'PARTIALLY_DELIVERED', 'CANCELLED'].includes(
+      existingSell.saleStatus,
+    )
+  ) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       `Cannot update ${existingSell.saleStatus.toLowerCase()} sale`,
@@ -1590,7 +1631,9 @@ const updateSaleStatus = async (saleId, newStatus, userId) => {
       ).length;
 
       console.log(
-        `📢 Successfully processed ${newStatus.toLowerCase()} notifications for ${successfulShopCount} shops and ${usersWithShopAccess.length} users for sale #${updatedSale.invoiceNo}`,
+        `📢 Successfully processed ${newStatus.toLowerCase()} notifications for ${successfulShopCount} shops and ${
+          usersWithShopAccess.length
+        } users for sale #${updatedSale.invoiceNo}`,
       );
     } catch (notificationError) {
       console.error(
@@ -1979,7 +2022,20 @@ const getAllSellsForStore = async ({ startDate, endDate, userId } = {}) => {
     count: sells.length,
   };
 };
+
+// 2. Separate function to unlock a sell record
+const unlockSell = async (id) => {
+  const sell = await prisma.sell.update({
+    where: { id },
+    data: {
+      locked: false,
+      lockedAt: new Date(), // re-lock now
+    },
+  });
+  return sell;
+};
 module.exports = {
+  unlockSell,
   getSellById,
   getSellByInvoiceNo,
   getAllSells,

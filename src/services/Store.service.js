@@ -24,9 +24,53 @@ const getStoreByName = async (name) => {
 };
 
 // Get all Stores
-const getAllStores = async (filter = {}) => {
+const getAllStores = async (userId, filter = {}) => {
+  // Get the user with their accessible stores
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      stores: { select: { id: true } },
+    },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // If user is admin, return all stores
+  if (user.admin) {
+    const stores = await prisma.store.findMany({
+      where: filter,
+      orderBy: {
+        name: 'asc',
+      },
+      include: {
+        branch: true,
+      },
+    });
+
+    return {
+      stores,
+      count: stores.length,
+    };
+  }
+
+  // Regular user: filter by accessible stores
+  const accessibleStoreIds = user.stores.map((store) => store.id);
+
+  // If user has no stores, return empty array
+  if (accessibleStoreIds.length === 0) {
+    return {
+      stores: [],
+      count: 0,
+    };
+  }
+
   const stores = await prisma.store.findMany({
-    where: filter,
+    where: {
+      ...filter,
+      id: { in: accessibleStoreIds }, // Filter by accessible stores
+    },
     orderBy: {
       name: 'asc',
     },

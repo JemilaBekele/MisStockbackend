@@ -68,6 +68,8 @@ router.get(
 // Get all products
 router.get(
   '/api/products',
+  auth,
+
   // checkPermission('VIEW_PRODUCT'),
   productController.getProducts,
 );

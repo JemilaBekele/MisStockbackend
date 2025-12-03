@@ -86,6 +86,7 @@ class SystemInitializer {
         password: process.env.ADMIN_PASSWORD || 'Admin@1234',
         roleId: adminRole.id,
         status: 'Active',
+        admin: true,
       };
 
       // First try to find existing admin user
@@ -100,9 +101,10 @@ class SystemInitializer {
         } else {
           // User exists, check role
           // eslint-disable-next-line no-lonely-if
-          if (adminUser.roleId !== adminRole.id) {
-            adminUser = await userService.updateUser(adminUser.id, {
+          if (adminUser.roleId !== adminRole.id || adminUser.admin !== true) {
+            adminUser = await userService.updateUserById(adminUser.id, {
               roleId: adminRole.id,
+              admin: true,
             });
             logger.info('Existing admin user role updated');
           } else {

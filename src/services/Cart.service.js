@@ -772,7 +772,26 @@ const checkoutCart = async (cartId, checkoutData, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  const cart = await getCartById(cartId);
+  // Fetch cart with customer information
+  const cart = await prisma.addToCart.findUnique({
+    where: { id: cartId },
+    include: {
+      customer: true, // Include customer to validate
+      items: {
+        include: {
+          shop: true,
+          product: {
+            include: {
+              category: true,
+              unitOfMeasure: true,
+            },
+          },
+          unitOfMeasure: true,
+        },
+      },
+    },
+  });
+
   if (!cart) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
   }
@@ -785,17 +804,33 @@ const checkoutCart = async (cartId, checkoutData, userId) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot checkout empty cart');
   }
 
+  // Validate that cart has a customer (customerId is required for checkout)
+  if (!cart.customerId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cart must be associated with a customer to checkout',
+    );
+  }
+
+  // Validate customer exists
+  if (!cart.customer) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Associated customer not found');
+  }
+
   // Prepare sell body with branch information from the logged-in user
   const sellBody = {
     ...checkoutData,
     branchId: user.branchId, // Add branchId from the logged-in user
-    customerId: cart.customerId, // Include customer from cart
+    customerId: cart.customerId, // REQUIRED customerId from cart
+    customer: cart.customer, // Include customer data
     items: cart.items.map((item) => ({
       productId: item.productId,
       shopId: item.shopId,
       unitOfMeasureId: item.unitOfMeasureId,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
+      product: item.product, // Pass product info if needed
+      shop: item.shop, // Pass shop info if needed
     })),
   };
 
@@ -811,6 +846,7 @@ const checkoutCart = async (cartId, checkoutData, userId) => {
     },
   });
 
+  // Return updated cart with customer info
   return {
     cart: await getCartById(cartId), // Return updated cart
     sell,
@@ -826,7 +862,7 @@ const addToWaitlist = async (data, userId) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Valid cartItemId is required');
   }
 
-  // Rest of your existing function remains the same...
+  // Fetch cart item with cart and customer information
   const cartItem = await prisma.cartItem.findUnique({
     where: { id: cartItemId },
     include: {
@@ -838,12 +874,24 @@ const addToWaitlist = async (data, userId) => {
       },
       shop: true,
       unitOfMeasure: true,
-      cart: true,
+      cart: {
+        include: {
+          customer: true, // Include customer to verify it exists
+        },
+      },
     },
   });
 
   if (!cartItem) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Cart item not found');
+  }
+
+  // Validate cart has a customer (customerId is required for waitlist)
+  if (!cartItem.cart.customerId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Cart must be associated with a customer to add to waitlist',
+    );
   }
 
   // Check if waitlist item already exists for same product, same shop, AND same quantity
@@ -910,11 +958,11 @@ const addToWaitlist = async (data, userId) => {
       },
     });
   } else {
-    // Create new waitlist entry
+    // Create new waitlist entry with REQUIRED customerId
     waitlist = await prisma.waitlist.create({
       data: {
         userId,
-        customerId: cartItem.cart.customerId || undefined,
+        customerId: cartItem.cart.customerId, // REQUIRED - no longer optional
         branchId: cartItem.cart.branchId || undefined,
         cartId: cartItem.cartId,
         cartItemId,
@@ -978,7 +1026,7 @@ const removeItemFromWaitlist = async (waitlistItemId) => {
     where: { id: waitlistItemId },
     include: {
       cart: true,
-      product: true,
+      customer: true,
     },
   });
 
@@ -1005,8 +1053,6 @@ const clearWaitlist = async (cartId) => {
     await tx.waitlist.deleteMany({
       where: { cartId },
     });
-
-    // Note: Waitlist doesn't have totals like cart, so we don't need to update any totals
   });
 
   return { message: 'Waitlist cleared successfully' };
@@ -1034,16 +1080,16 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
     },
     include: {
       user: true,
-      customer: true,
+      customer: true, // Always include customer since it's required
       branch: true,
       cart: true,
       cartItem: {
         include: {
           product: true,
           unitOfMeasure: true,
+          shop: true,
         },
       },
-      shop: true,
       product: true,
       createdBy: true,
       updatedBy: true,
@@ -1052,12 +1098,14 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
 
   return waitlists;
 };
+
 // Convert waitlist to cart item
 const convertWaitlistToCartItem = async (waitlistId, userId) => {
   const waitlist = await prisma.waitlist.findUnique({
     where: { id: waitlistId },
     include: {
       user: true,
+      customer: true, // Include customer since it's required
       product: {
         include: {
           unitOfMeasure: true,
@@ -1078,6 +1126,14 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Waitlist entry not found');
   }
 
+  // Validate customer exists (should always exist due to model requirement)
+  if (!waitlist.customerId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Waitlist must be associated with a customer',
+    );
+  }
+
   // Check if user has permission (either waitlist user or created by user)
   if (waitlist.userId !== userId && waitlist.createdById !== userId) {
     throw new ApiError(
@@ -1086,10 +1142,11 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     );
   }
 
-  // Find or create cart for user
+  // Find or create cart for user with customer association
   let cart = await prisma.addToCart.findFirst({
     where: {
       userId,
+      customerId: waitlist.customerId, // Ensure cart is for the same customer
       isCheckedOut: false,
     },
     include: {
@@ -1105,8 +1162,8 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     cart = await prisma.addToCart.create({
       data: {
         userId,
+        customerId: waitlist.customerId, // REQUIRED for cart
         branchId: user.branchId || waitlist.branchId,
-        customerId: waitlist.customerId,
         isCheckedOut: false,
         totalItems: 0,
         totalAmount: 0,
@@ -1116,15 +1173,13 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     });
   }
 
-  // Determine shopId - priority: waitlist.shopId > cartItem.shopId > product's default shop
+  // Determine shopId - priority: waitlist.shopId > cartItem.shopId
   let { shopId } = waitlist;
   if (!shopId && waitlist.cartItem?.shopId) {
     shopId = waitlist.cartItem.shopId;
   }
 
   if (!shopId) {
-    // You might need to get a default shop for the product
-    // This depends on your business logic
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       'Shop ID is required for cart item',
@@ -1203,20 +1258,10 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     });
   }
 
-  // Update waitlist - you might want to mark it as converted or delete it
-  // Option 1: Delete the waitlist entry
+  // Delete the waitlist entry after converting to cart
   await prisma.waitlist.delete({
     where: { id: waitlistId },
   });
-
-  // Option 2: Mark as converted (if you add a status field to Waitlist)
-  // await prisma.waitlist.update({
-  //   where: { id: waitlistId },
-  //   data: {
-  //     status: 'CONVERTED',
-  //     updatedById: userId,
-  //   },
-  // });
 
   // Update cart totals
   await updateCartTotals(cart.id);
@@ -1226,6 +1271,33 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     cart: await getCartById(cart.id),
     message: 'Waitlist item successfully added to cart',
   };
+};
+
+// Delete cart
+const deleteCart = async (cartId) => {
+  const cart = await getCartById(cartId);
+  if (!cart) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Delete all cart items
+    await tx.cartItem.deleteMany({
+      where: { cartId },
+    });
+
+    // Delete all associated waitlists
+    await tx.waitlist.deleteMany({
+      where: { cartId },
+    });
+
+    // Delete the cart
+    await tx.addToCart.delete({
+      where: { id: cartId },
+    });
+  });
+
+  return { message: 'Cart deleted successfully' };
 };
 // Get all waitlists (admin function)
 const getAllWaitlists = async (filters = {}) => {
@@ -1269,34 +1341,6 @@ const getAllWaitlists = async (filters = {}) => {
 
   return waitlists;
 };
-
-// Delete cart
-const deleteCart = async (cartId) => {
-  const cart = await getCartById(cartId);
-  if (!cart) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Cart not found');
-  }
-
-  await prisma.$transaction(async (tx) => {
-    // Delete all cart items
-    await tx.cartItem.deleteMany({
-      where: { cartId },
-    });
-
-    // Delete all associated waitlists
-    await tx.waitlist.deleteMany({
-      where: { cartId },
-    });
-
-    // Delete the cart
-    await tx.addToCart.delete({
-      where: { id: cartId },
-    });
-  });
-
-  return { message: 'Cart deleted successfully' };
-};
-
 module.exports = {
   getCartById,
   getCartByUserId,

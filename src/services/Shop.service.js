@@ -22,8 +22,52 @@ const getShopByName = async (name) => {
 };
 
 // Get all Shops
-const getAllShops = async () => {
+
+const getAllShops = async (userId) => {
+  // Get the user with their accessible shops
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      shops: { select: { id: true } },
+    },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // If user is admin, return all shops
+  if (user.admin) {
+    const shops = await prisma.shop.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+      include: {
+        branch: true,
+      },
+    });
+
+    return {
+      shops,
+      count: shops.length,
+    };
+  }
+
+  // Regular user: filter by accessible shops
+  const accessibleShopIds = user.shops.map((shop) => shop.id);
+
+  // If user has no shops, return empty array
+  if (accessibleShopIds.length === 0) {
+    return {
+      shops: [],
+      count: 0,
+    };
+  }
+
   const shops = await prisma.shop.findMany({
+    where: {
+      id: { in: accessibleShopIds }, // Filter by accessible shops
+    },
     orderBy: {
       name: 'asc',
     },
@@ -244,11 +288,6 @@ const UsergetAvailableBatchesByProductAndShop = async (productId, userId) => {
   };
 };
 const getAvailableBatchesByProductAndShop = async (productId, shopId) => {
-  console.log('🔍 getAvailableBatchesByProductAndShop called with:', {
-    productId,
-    shopId,
-  });
-
   try {
     // Check if the requested product exists
     const productExists = await prisma.product.findUnique({
@@ -256,10 +295,7 @@ const getAvailableBatchesByProductAndShop = async (productId, shopId) => {
       select: { id: true },
     });
 
-    console.log('📦 Product exists:', productExists);
-
     if (!productExists) {
-      console.log('❌ Product not found');
       return {
         batches: [],
         additionalPrices: [],
@@ -273,10 +309,7 @@ const getAvailableBatchesByProductAndShop = async (productId, shopId) => {
       select: { id: true },
     });
 
-    console.log('🏪 Shop exists:', shopExists);
-
     if (!shopExists) {
-      console.log('❌ Shop not found');
       return {
         batches: [],
         additionalPrices: [],
@@ -289,13 +322,13 @@ const getAvailableBatchesByProductAndShop = async (productId, shopId) => {
       where: {
         productId,
         OR: [
-          { shopId: shopId }, // Shop-specific additional prices
-          { shopId: null }    // Global additional prices
-        ]
+          { shopId }, // Shop-specific additional prices
+          { shopId: null }, // Global additional prices
+        ],
       },
       orderBy: {
-        price: 'asc'
-      }
+        price: 'asc',
+      },
     });
 
     // Main query for batches
@@ -333,30 +366,6 @@ const getAvailableBatchesByProductAndShop = async (productId, shopId) => {
         },
       },
     });
-
-    console.log('✅ Final batches found:', batches.length);
-    console.log('💰 Additional prices found:', additionalPrices.length);
-    console.log(
-      '📦 Batch details:',
-      batches.map((batch) => ({
-        id: batch.id,
-        batchNumber: batch.batchNumber,
-        productId: batch.productId,
-        expiryDate: batch.expiryDate,
-        shopStocks: batch.ShopStock.map((stock) => ({
-          quantity: stock.quantity,
-          status: stock.status,
-        })),
-      })),
-    );
-    console.log(
-      '💰 Additional price details:',
-      additionalPrices.map((ap) => ({
-        label: ap.label,
-        price: ap.price,
-        shopId: ap.shopId,
-      })),
-    );
 
     return {
       batches,

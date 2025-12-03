@@ -142,6 +142,8 @@ const getAllTransfers = async ({ startDate, endDate } = {}) => {
       sourceShop: true,
       destStore: true,
       destShop: true,
+      createdBy: true,
+      updatedBy: true,
       _count: {
         select: { items: true },
       },
@@ -307,7 +309,6 @@ const createTransfer = async (transferBody, userId) => {
     data: {
       ...cleanedTransferBody,
       createdById: userId,
-      updatedById: userId,
       items: {
         create: items.map((item) => ({
           productId: item.productId,
@@ -332,7 +333,7 @@ const createTransfer = async (transferBody, userId) => {
 };
 // Update Transfer
 // Update Transfer
-const updateTransfer = async (transferId, transferBody, userId) => {
+const updateTransfer = async (transferId, transferBody) => {
   // Check if transfer exists
   const existingTransfer = await getTransferById(transferId);
   if (!existingTransfer) {
@@ -470,7 +471,6 @@ const updateTransfer = async (transferId, transferBody, userId) => {
       where: { id: transferId },
       data: {
         ...cleanedTransferBody,
-        updatedById: userId,
         items: {
           create: items.map((item) => ({
             productId: item.productId,

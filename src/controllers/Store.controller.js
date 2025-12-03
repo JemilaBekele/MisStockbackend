@@ -27,7 +27,9 @@ const getStore = catchAsync(async (req, res) => {
 
 // Get all Stores
 const getStores = catchAsync(async (req, res) => {
-  const result = await storeService.getAllStores();
+  const userId = req.user.id; // ✅ extract userId
+
+  const result = await storeService.getAllStores(userId);
   res.status(httpStatus.OK).send({
     success: true,
     ...result,

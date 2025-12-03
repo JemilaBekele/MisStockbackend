@@ -125,13 +125,9 @@ const getActiveAllProducts = catchAsync(async (req, res) => {
 });
 
 const getProducts = catchAsync(async (req, res) => {
-  const filter = {
-    categoryId: req.query.categoryId,
-    subCategoryId: req.query.subCategoryId,
-    search: req.query.search,
-  };
+  const userId = req.user.id;
 
-  const result = await productService.getAllProducts(filter);
+  const result = await productService.getAllProducts(userId);
   res.status(httpStatus.OK).send({
     success: true,
     ...result,
@@ -201,8 +197,11 @@ const createProductBatchsingle = catchAsync(async (req, res) => {
 });
 const getProductById = catchAsync(async (req, res) => {
   const { productId } = req.params;
-
-  const productDetails = await productService.getProductDetails(productId);
+  const userId = req.user.id;
+  const productDetails = await productService.getProductDetails(
+    productId,
+    userId,
+  );
 
   if (!productDetails) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Product not found');
