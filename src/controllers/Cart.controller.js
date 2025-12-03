@@ -102,19 +102,50 @@ const removeItemFromCart = catchAsync(async (req, res) => {
   });
 });
 const assignCustomerToCart = catchAsync(async (req, res) => {
+  console.log('=== REQUEST RECEIVED ===');
+  console.log('Method:', req.method);
+  console.log('Original URL:', req.originalUrl);
+  console.log('Params:', req.params);
+  console.log('Body:', req.body);
+  console.log('=======================');
+
   const { cartId } = req.params;
   const { customerId } = req.body;
 
-  const updatedCart = await cartService.assignCustomerToCart(
-    cartId,
-    customerId,
-  );
+  console.log('Parsed - cartId:', cartId);
+  console.log('Parsed - customerId:', customerId);
 
-  res.status(httpStatus.OK).send({
-    success: true,
-    message: 'Customer assigned to cart successfully',
-    cart: updatedCart,
-  });
+  if (!cartId) {
+    console.error('ERROR: cartId is missing from params');
+    return res.status(400).json({
+      success: false,
+      message: 'Cart ID is required in URL path',
+    });
+  }
+
+  if (!customerId) {
+    console.error('ERROR: customerId is missing from body');
+    return res.status(400).json({
+      success: false,
+      message: 'Customer ID is required in request body',
+    });
+  }
+
+  try {
+    const updatedCart = await cartService.assignCustomerToCart(
+      cartId,
+      customerId,
+    );
+
+    res.status(httpStatus.OK).send({
+      success: true,
+      message: 'Customer assigned to cart successfully',
+      cart: updatedCart,
+    });
+  } catch (error) {
+    console.error('Controller Error:', error.message);
+    throw error; // Let catchAsync handle it
+  }
 });
 // Checkout cart (convert to sell)
 const checkoutCart = catchAsync(async (req, res) => {
