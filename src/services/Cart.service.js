@@ -1160,11 +1160,10 @@ const clearWaitlist = async (cartId) => {
 const getWaitlistsByUser = async (userId, filters = {}) => {
   console.log('🔍 getWaitlistsByUser called with:', { userId, filters });
   
-  const { startDate, endDate, includeNoCustomer = false } = filters; // Add includeNoCustomer flag
+  const { startDate, endDate, includeNoCustomer = false } = filters;
 
   const whereClause = {
     userId,
-    // Only include waitlists with customers by default
     ...(includeNoCustomer ? {} : { customerId: { not: null } })
   };
 
@@ -1178,6 +1177,25 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
   console.log('📝 Prisma where clause:', JSON.stringify(whereClause, null, 2));
 
   try {
+    // First, let's see what's in the database without includes
+    const rawWaitlists = await prisma.waitlist.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        cartItemId: true,
+        quantity: true,
+        note: true,
+        customerId: true,
+        cartId: true,
+      }
+    });
+
+    console.log('📊 Raw waitlists from DB:', JSON.stringify(rawWaitlists, null, 2));
+    console.log('📊 Waitlists with cartItemId:', rawWaitlists.filter(w => w.cartItemId).length);
+    console.log('📊 Waitlists without cartItemId:', rawWaitlists.filter(w => !w.cartItemId).length);
+
+    // Now get full data with includes
     const waitlists = await prisma.waitlist.findMany({
       where: whereClause,
       orderBy: {
@@ -1200,23 +1218,27 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
       },
     });
 
-    console.log('✅ Found waitlists:', waitlists.length);
-    console.log('📊 Waitlists with customers:', waitlists.filter(w => w.customer).length);
-    console.log('📊 Waitlists without customers:', waitlists.filter(w => !w.customer).length);
+    console.log('✅ Found waitlists with includes:', waitlists.length);
     
-    if (waitlists.length > 0) {
-      console.log('📊 First waitlist item structure:', {
-        id: waitlists[0].id,
-        quantity: waitlists[0].quantity,
-        cartItemId: waitlists[0].cartItemId,
-        cartItemExists: !!waitlists[0].cartItem,
-        cartItemQuantity: waitlists[0].cartItem?.quantity,
-        customerName: waitlists[0].customer?.name,
-        productName: waitlists[0].cartItem?.product?.name
-      });
-    }
+    // Detailed logging for each waitlist
+    waitlists.forEach((waitlist, index) => {
+      console.log(`\n📋 Waitlist ${index + 1}:`);
+      console.log(`   ID: ${waitlist.id}`);
+      console.log(`   cartItemId: ${waitlist.cartItemId}`);
+      console.log(`   cartItem exists: ${!!waitlist.cartItem}`);
+      console.log(`   Note: ${waitlist.note}`);
+      console.log(`   Cart ID: ${waitlist.cartId}`);
+      
+      if (waitlist.cartItem) {
+        console.log(`   Product: ${waitlist.cartItem.product?.name || 'N/A'}`);
+        console.log(`   Cart Item Quantity: ${waitlist.cartItem.quantity}`);
+        console.log(`   Waitlist Quantity: ${waitlist.quantity}`);
+      } else {
+        console.log(`   Cart Item: NULL - reason: cartItemId is ${waitlist.cartItemId}`);
+      }
+    });
 
-    // Transform the data structure to match frontend expectations
+    // Transform the data structure
     const transformedWaitlists = waitlists.map((waitlist) => {
       // Create a properly structured cartItem if it exists
       const cartItem = waitlist.cartItem
@@ -1246,7 +1268,7 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
         cartId: waitlist.cartId,
         cartItemId: waitlist.cartItemId,
         note: waitlist.note,
-        quantity: waitlist.quantity, // Keep the original quantity on waitlist
+        quantity: waitlist.quantity,
         createdById: waitlist.createdById,
         updatedById: waitlist.updatedById,
         createdAt: waitlist.createdAt,
@@ -1257,7 +1279,7 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
         customer: waitlist.customer,
         branch: waitlist.branch,
         cart: waitlist.cart,
-        cartItem, // Use the transformed cartItem
+        cartItem, // This might be null
         createdBy: waitlist.createdBy,
         updatedBy: waitlist.updatedBy,
       };
@@ -1268,12 +1290,6 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
 
   } catch (error) {
     console.error('❌ Error in getWaitlistsByUser:', error);
-    console.error('❌ Error details:', {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-      stack: error.stack
-    });
     throw error;
   }
 };
