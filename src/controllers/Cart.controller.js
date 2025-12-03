@@ -157,11 +157,6 @@ const deleteCart = catchAsync(async (req, res) => {
 const addToWaitlist = catchAsync(async (req, res) => {
   const userId = req.user.id;
   const { cartItemIds, note } = req.body;
-
-  console.log('=== CONTROLLER START ===');
-  console.log('User ID:', userId);
-  console.log('Request Body:', JSON.stringify(req.body, null, 2));
-
   // Enhanced validation with specific messages
   if (!cartItemIds) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'cartItemIds field is required');
@@ -197,15 +192,11 @@ const addToWaitlist = catchAsync(async (req, res) => {
     }
   });
 
-  console.log('Validation passed, calling service...');
-
   try {
     const result = await cartService.addToWaitlist(
       { cartItemIds, note },
       userId,
     );
-
-    console.log('Service returned:', JSON.stringify(result, null, 2));
 
     // Send appropriate response based on results
     if (result.failedItems > 0) {

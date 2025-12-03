@@ -922,11 +922,6 @@ const addToWaitlist = async (data, userId) => {
     );
   }
 
-  console.log(`=== BULK WAITLIST ADD START ===`);
-  console.log(
-    `Processing ${cartItemIds.length} cart items for user: ${userId}`,
-  );
-
   // Fetch all cart items with their carts and customer information
   const cartItems = await prisma.cartItem.findMany({
     where: {
@@ -948,8 +943,6 @@ const addToWaitlist = async (data, userId) => {
       },
     },
   });
-
-  console.log(`Found ${cartItems.length} cart items`);
 
   if (cartItems.length === 0) {
     throw new ApiError(
@@ -978,8 +971,6 @@ const addToWaitlist = async (data, userId) => {
     );
   }
 
-  console.log(`Customer ID: ${customerId}, Cart ID: ${cartId}`);
-
   // Check for existing waitlist items for these cart items
   const existingWaitlistItems = await prisma.waitlist.findMany({
     where: {
@@ -988,12 +979,11 @@ const addToWaitlist = async (data, userId) => {
     },
   });
 
-  console.log(`Found ${existingWaitlistItems.length} existing waitlist items`);
-
   const waitlistResults = [];
   const errors = [];
 
   // Process each cart item
+  // eslint-disable-next-line no-restricted-syntax
   for (const cartItem of cartItems) {
     try {
       // Check if this specific cart item already has a waitlist entry
@@ -1004,10 +994,7 @@ const addToWaitlist = async (data, userId) => {
       let waitlist;
 
       if (existingItem) {
-        // Update existing waitlist item
-        console.log(
-          `Updating existing waitlist item for product: ${cartItem.product.name}`,
-        );
+        // eslint-disable-next-line no-await-in-loop
         waitlist = await prisma.waitlist.update({
           where: { id: existingItem.id },
           data: {
@@ -1051,10 +1038,7 @@ const addToWaitlist = async (data, userId) => {
           },
         });
       } else {
-        // Create new waitlist entry - only include fields that exist in Waitlist model
-        console.log(
-          `Creating new waitlist item for product: ${cartItem.product.name}`,
-        );
+        // eslint-disable-next-line no-await-in-loop
         waitlist = await prisma.waitlist.create({
           data: {
             userId,
@@ -1105,12 +1089,7 @@ const addToWaitlist = async (data, userId) => {
       }
 
       waitlistResults.push(waitlist);
-      console.log(`✓ Successfully processed: ${cartItem.product.name}`);
     } catch (error) {
-      console.error(
-        `✗ Error processing cart item ${cartItem.id}:`,
-        error.message,
-      );
       errors.push({
         cartItemId: cartItem.id,
         productName: cartItem.product.name,
@@ -1118,10 +1097,6 @@ const addToWaitlist = async (data, userId) => {
       });
     }
   }
-
-  console.log(`=== BULK WAITLIST ADD COMPLETE ===`);
-  console.log(`Successfully processed: ${waitlistResults.length} items`);
-  console.log(`Errors: ${errors.length} items`);
 
   // If all items failed, throw an error
   if (waitlistResults.length === 0 && errors.length > 0) {
@@ -1203,7 +1178,7 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
     },
     include: {
       user: true,
-      customer: true, // Always include customer since it's required
+      customer: true,
       branch: true,
       cart: true,
       cartItem: {
@@ -1211,15 +1186,61 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
           product: true,
           unitOfMeasure: true,
           shop: true,
+          batch: true,
         },
       },
-      product: true,
       createdBy: true,
       updatedBy: true,
     },
   });
 
-  return waitlists;
+  // Transform the data structure to match frontend expectations
+  return waitlists.map((waitlist) => {
+    // Create a properly structured cartItem if it exists
+    const cartItem = waitlist.cartItem
+      ? {
+          id: waitlist.cartItem.id,
+          cartId: waitlist.cartItem.cartId,
+          shopId: waitlist.cartItem.shopId,
+          productId: waitlist.cartItem.productId,
+          unitOfMeasureId: waitlist.cartItem.unitOfMeasureId,
+          quantity: waitlist.quantity, // Use waitlist quantity
+          unitPrice: waitlist.cartItem.unitPrice,
+          totalPrice: waitlist.cartItem.totalPrice,
+          notes: waitlist.cartItem.notes,
+          createdAt: waitlist.cartItem.createdAt,
+          updatedAt: waitlist.cartItem.updatedAt,
+          shop: waitlist.cartItem.shop,
+          product: waitlist.cartItem.product,
+          batch: waitlist.cartItem.batch,
+          unitOfMeasure: waitlist.cartItem.unitOfMeasure,
+        }
+      : null;
+
+    return {
+      id: waitlist.id,
+      userId: waitlist.userId,
+      customerId: waitlist.customerId,
+      branchId: waitlist.branchId,
+      cartId: waitlist.cartId,
+      cartItemId: waitlist.cartItemId,
+      note: waitlist.note,
+      quantity: waitlist.quantity, // Keep the original quantity on waitlist
+      createdById: waitlist.createdById,
+      updatedById: waitlist.updatedById,
+      createdAt: waitlist.createdAt,
+      updatedAt: waitlist.updatedAt,
+
+      // Relations
+      user: waitlist.user,
+      customer: waitlist.customer,
+      branch: waitlist.branch,
+      cart: waitlist.cart,
+      cartItem, // Use the transformed cartItem
+      createdBy: waitlist.createdBy,
+      updatedBy: waitlist.updatedBy,
+    };
+  });
 };
 
 // Convert waitlist to cart item
