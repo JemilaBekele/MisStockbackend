@@ -1160,10 +1160,12 @@ const clearWaitlist = async (cartId) => {
 const getWaitlistsByUser = async (userId, filters = {}) => {
   console.log('🔍 getWaitlistsByUser called with:', { userId, filters });
   
-  const { startDate, endDate } = filters;
+  const { startDate, endDate, includeNoCustomer = false } = filters; // Add includeNoCustomer flag
 
   const whereClause = {
     userId,
+    // Only include waitlists with customers by default
+    ...(includeNoCustomer ? {} : { customerId: { not: null } })
   };
 
   // Add date filters
@@ -1199,6 +1201,9 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
     });
 
     console.log('✅ Found waitlists:', waitlists.length);
+    console.log('📊 Waitlists with customers:', waitlists.filter(w => w.customer).length);
+    console.log('📊 Waitlists without customers:', waitlists.filter(w => !w.customer).length);
+    
     if (waitlists.length > 0) {
       console.log('📊 First waitlist item structure:', {
         id: waitlists[0].id,
