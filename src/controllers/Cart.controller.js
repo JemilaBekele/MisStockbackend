@@ -291,20 +291,23 @@ const getWaitlist = catchAsync(async (req, res) => {
 });
 
 // Convert waitlist to cart item
-const convertWaitlistToCart = catchAsync(async (req, res) => {
+// Convert ALL waitlist items for a customer to cart
+const convertCustomerWaitlistToCart = catchAsync(async (req, res) => {
   const userId = req.user.id;
-  const { waitlistId } = req.params;
+  const { customerId } = req.params; // Accept customerId instead of waitlistId
 
-  const result = await cartService.convertWaitlistToCartItem(
-    waitlistId,
+  const result = await cartService.convertCustomerWaitlistToCart(
+    customerId,
     userId,
   );
 
   res.status(httpStatus.OK).send({
     success: true,
     message: result.message,
-    cartItem: result.cartItem,
+    cartItems: result.cartItems,
+    totalItemsConverted: result.totalItemsConverted,
     cart: result.cart,
+    customer: result.customer,
   });
 });
 
@@ -350,6 +353,6 @@ module.exports = {
   getMyWaitlists,
   getAllWaitlists,
   getWaitlist,
-  convertWaitlistToCart,
+  convertCustomerWaitlistToCart,
   getCartWaitlists,
 };

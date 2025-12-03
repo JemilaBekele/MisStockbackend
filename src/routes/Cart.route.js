@@ -116,9 +116,9 @@ router.delete(
   cartController.clearWaitlist,
 );
 router.post(
-  '/api/waitlists/:waitlistId/convert-to-cart',
+  '/api/waitlists/:customerId/convert-to-cart',
   auth,
-  cartController.convertWaitlistToCart,
+  cartController.convertCustomerWaitlistToCart,
 );
 router.get('/api/waitlists', auth, cartController.getAllWaitlists); // admin only
 router.get('/api/waitlists/:waitlistId', auth, cartController.getWaitlist);

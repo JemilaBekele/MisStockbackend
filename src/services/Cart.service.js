@@ -1306,9 +1306,16 @@ const getWaitlistsByUser = async (userId, filters = {}) => {
 };
 
 // Convert waitlist to cart item
-const convertWaitlistToCartItem = async (waitlistId, userId) => {
-  const waitlist = await prisma.waitlist.findUnique({
-    where: { id: waitlistId },
+const convertCustomerWaitlistToCart = async (customerId, userId) => {
+  // Get all waitlist items for this customer that belong to the user
+  const waitlists = await prisma.waitlist.findMany({
+    where: {
+      customerId,
+      OR: [
+        { userId },
+        { createdById: userId }
+      ]
+    },
     include: {
       user: true,
       customer: true,
@@ -1316,7 +1323,7 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
         include: {
           items: {
             where: {
-              isWaitlist: true, // Only include waitlisted items
+              isWaitlist: true,
             },
           },
         },
@@ -1332,23 +1339,10 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     },
   });
 
-  if (!waitlist) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Waitlist entry not found');
-  }
-
-  // Validate customer exists
-  if (!waitlist.customerId) {
+  if (!waitlists || waitlists.length === 0) {
     throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Waitlist must be associated with a customer',
-    );
-  }
-
-  // Check if user has permission
-  if (waitlist.userId !== userId && waitlist.createdById !== userId) {
-    throw new ApiError(
-      httpStatus.FORBIDDEN,
-      'You can only convert your own waitlist items',
+      httpStatus.NOT_FOUND,
+      'No waitlist items found for this customer'
     );
   }
 
@@ -1356,9 +1350,9 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
   let cart = await prisma.addToCart.findFirst({
     where: {
       userId,
-      customerId: waitlist.customerId,
+      customerId,
       isCheckedOut: false,
-      isWaitlist: false, // Look for non-waitlisted cart
+      isWaitlist: false,
     },
     include: {
       items: true,
@@ -1370,13 +1364,16 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
       where: { id: userId },
     });
 
+    // Use the branchId from the first waitlist item
+    const firstWaitlist = waitlists[0];
+
     cart = await prisma.addToCart.create({
       data: {
         userId,
-        customerId: waitlist.customerId,
-        branchId: user.branchId || waitlist.branchId,
+        customerId,
+        branchId: user.branchId || firstWaitlist.branchId,
         isCheckedOut: false,
-        isWaitlist: false, // New cart is not waitlisted
+        isWaitlist: false,
         totalItems: 0,
         totalAmount: 0,
         createdById: userId,
@@ -1385,200 +1382,136 @@ const convertWaitlistToCartItem = async (waitlistId, userId) => {
     });
   }
 
-  // Determine shopId
-  let { shopId } = waitlist;
-  if (!shopId && waitlist.cartItem?.shopId) {
-    shopId = waitlist.cartItem.shopId;
-  }
+  const allConvertedItems = [];
+  const processedCartIds = new Set();
+  const processedCartItemIds = new Set();
+  const waitlistIdsToDelete = [];
 
-  if (!shopId) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      'Shop ID is required for cart item',
-    );
-  }
+  // Process each waitlist item
+  for (const waitlist of waitlists) {
+    try {
+      let convertedItem = null;
 
-  // Verify shop exists
-  const shop = await prisma.shop.findUnique({
-    where: { id: shopId },
-  });
+      // If this waitlist is linked to a specific cart item
+      if (waitlist.cartItemId && !processedCartItemIds.has(waitlist.cartItemId)) {
+        processedCartItemIds.add(waitlist.cartItemId);
+        
+        const originalCartItem = await prisma.cartItem.findUnique({
+          where: { id: waitlist.cartItemId },
+        });
 
-  if (!shop) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid shop ID');
-  }
-
-  let cartItem = null;
-  const allCartItemsUpdated = [];
-
-  // If this waitlist is linked to a specific cart item
-  if (waitlist.cartItemId) {
-    // Check if the original cart item still exists and is marked as waitlist
-    const originalCartItem = await prisma.cartItem.findUnique({
-      where: { id: waitlist.cartItemId },
-    });
-
-    if (originalCartItem && originalCartItem.isWaitlist) {
-      // CASE 1: Convert single cart item from waitlist
-      cartItem = await prisma.cartItem.update({
-        where: { id: originalCartItem.id },
-        data: {
-          cartId: cart.id, // Move to new cart
-          isWaitlist: false, // Remove waitlist flag
-          notes: `Moved from waitlist: ${waitlist.note || 'No note'}`,
-        },
-        include: {
-          shop: true,
-          product: {
-            include: {
-              unitOfMeasure: true,
-              category: true,
+        if (originalCartItem && originalCartItem.isWaitlist) {
+          // Convert single cart item from waitlist
+          convertedItem = await prisma.cartItem.update({
+            where: { id: originalCartItem.id },
+            data: {
+              cartId: cart.id,
+              isWaitlist: false,
+              notes: `Bulk converted from customer waitlist: ${waitlist.note || 'No note'}`,
             },
-          },
-          unitOfMeasure: true,
-        },
-      });
-
-      allCartItemsUpdated.push(cartItem);
-    } else {
-      // CASE 2: Original cart item doesn't exist or isn't waitlisted - create new
-      const unitPrice = waitlist.cartItem?.unitPrice || 0;
-      const totalPrice = waitlist.quantity * unitPrice;
-
-      cartItem = await prisma.cartItem.create({
-        data: {
-          cartId: cart.id,
-          shopId,
-          productId: waitlist.cartItem?.productId,
-          unitOfMeasureId: waitlist.cartItem?.unitOfMeasureId,
-          quantity: waitlist.quantity,
-          unitPrice,
-          totalPrice,
-          isWaitlist: false,
-          notes: `Added from waitlist: ${waitlist.note || 'No note'}`,
-        },
-        include: {
-          shop: true,
-          product: {
             include: {
+              shop: true,
+              product: {
+                include: {
+                  unitOfMeasure: true,
+                  category: true,
+                },
+              },
               unitOfMeasure: true,
-              category: true,
             },
-          },
-          unitOfMeasure: true,
-        },
-      });
+          });
 
-      allCartItemsUpdated.push(cartItem);
-    }
-  } else if (waitlist.cartId) {
-    // CASE 3: Waitlist entry is for entire cart - convert ALL waitlisted items in that cart
-    console.log(`Converting all waitlisted items from cart ${waitlist.cartId}`);
+          allConvertedItems.push(convertedItem);
+        }
+      }
+      // If this waitlist is linked to a cart with multiple waitlisted items
+      else if (waitlist.cartId && !processedCartIds.has(waitlist.cartId)) {
+        processedCartIds.add(waitlist.cartId);
 
-    // Get all waitlisted items from the original cart
-    const waitlistedCartItems = await prisma.cartItem.findMany({
-      where: {
-        cartId: waitlist.cartId,
-        isWaitlist: true,
-      },
-      include: {
-        product: true,
-        shop: true,
-        unitOfMeasure: true,
-      },
-    });
-
-    console.log(
-      `Found ${waitlistedCartItems.length} waitlisted items to convert`,
-    );
-
-    // Move each waitlisted item to the new cart
-    for (const item of waitlistedCartItems) {
-      try {
-        const updatedCartItem = await prisma.cartItem.update({
-          where: { id: item.id },
-          data: {
-            cartId: cart.id, // Move to new cart
-            isWaitlist: false, // Remove waitlist flag
-            notes: `Bulk moved from waitlist cart: ${
-              waitlist.note || 'No note'
-            }`,
+        // Get all waitlisted items from this cart
+        const waitlistedCartItems = await prisma.cartItem.findMany({
+          where: {
+            cartId: waitlist.cartId,
+            isWaitlist: true,
           },
           include: {
-            shop: true,
             product: true,
+            shop: true,
             unitOfMeasure: true,
           },
         });
 
-        allCartItemsUpdated.push(updatedCartItem);
-      } catch (error) {
-        console.error(`Failed to convert cart item ${item.id}:`, error);
+        // Move each waitlisted item to the new cart
+        for (const item of waitlistedCartItems) {
+          const updatedCartItem = await prisma.cartItem.update({
+            where: { id: item.id },
+            data: {
+              cartId: cart.id,
+              isWaitlist: false,
+              notes: `Bulk converted from customer waitlist cart`,
+            },
+            include: {
+              shop: true,
+              product: true,
+              unitOfMeasure: true,
+            },
+          });
+
+          allConvertedItems.push(updatedCartItem);
+        }
+
+        // Mark the original cart as not waitlisted if all items are moved
+        const remainingWaitlistedItems = await prisma.cartItem.count({
+          where: {
+            cartId: waitlist.cartId,
+            isWaitlist: true,
+          },
+        });
+
+        if (remainingWaitlistedItems === 0) {
+          await prisma.addToCart.update({
+            where: { id: waitlist.cartId },
+            data: {
+              isWaitlist: false,
+            },
+          });
+        }
       }
-    }
 
-    // Set cartItem to the first converted item for backward compatibility
-    cartItem = allCartItemsUpdated[0];
-  }
+      // Mark waitlist for deletion
+      waitlistIdsToDelete.push(waitlist.id);
 
-  // IMPORTANT: Update the original cart's waitlist status
-  if (waitlist.cartId) {
-    // Check if there are any remaining waitlisted items in the original cart
-    const remainingWaitlistedItems = await prisma.cartItem.count({
-      where: {
-        cartId: waitlist.cartId,
-        isWaitlist: true,
-      },
-    });
-
-    console.log(
-      `Remaining waitlisted items in cart ${waitlist.cartId}: ${remainingWaitlistedItems}`,
-    );
-
-    // If no more waitlisted items in this cart, mark cart as not waitlisted
-    if (remainingWaitlistedItems === 0) {
-      await prisma.addToCart.update({
-        where: { id: waitlist.cartId },
-        data: {
-          isWaitlist: false,
-        },
-      });
-      console.log(`Marked cart ${waitlist.cartId} as not waitlisted`);
+    } catch (error) {
+      console.error(`Failed to process waitlist ${waitlist.id}:`, error);
+      // Continue with other items
     }
   }
 
-  // Delete the waitlist entry after converting to cart
-  await prisma.waitlist.delete({
-    where: { id: waitlistId },
-  });
-
-  // If we converted multiple items from a cart, delete ALL waitlist entries for that cart
-  if (waitlist.cartId && allCartItemsUpdated.length > 1) {
-    console.log(`Deleting all waitlist entries for cart ${waitlist.cartId}`);
-
+  // Delete all processed waitlist entries
+  if (waitlistIdsToDelete.length > 0) {
     await prisma.waitlist.deleteMany({
       where: {
-        cartId: waitlist.cartId,
+        id: { in: waitlistIdsToDelete },
       },
     });
   }
 
-  // Update cart totals for the new cart
+  // Update cart totals
   await updateCartTotals(cart.id);
 
-  // If we moved items from an original cart, update its totals too
-  if (waitlist.cartId && waitlist.cartId !== cart.id) {
-    await updateCartTotals(waitlist.cartId);
+  // Update totals for any original carts we moved items from
+  for (const cartId of processedCartIds) {
+    if (cartId !== cart.id) {
+      await updateCartTotals(cartId);
+    }
   }
 
   return {
-    cartItem: cartItem || allCartItemsUpdated[0],
-    allCartItems: allCartItemsUpdated,
-    totalItemsConverted: allCartItemsUpdated.length,
+    cartItems: allConvertedItems,
+    totalItemsConverted: allConvertedItems.length,
     cart: await getCartById(cart.id),
-    message:
-      allCartItemsUpdated.length > 1
-        ? `${allCartItemsUpdated.length} waitlist items successfully added to cart`
-        : 'Waitlist item successfully added to cart',
+    customer: waitlists[0]?.customer,
+    message: `${allConvertedItems.length} waitlist items for customer "${waitlists[0]?.customer?.name}" successfully added to cart`,
   };
 };
 
@@ -1670,5 +1603,5 @@ module.exports = {
   removeItemFromWaitlist,
   getWaitlistsByUser,
   getAllWaitlists,
-  convertWaitlistToCartItem,
+  convertCustomerWaitlistToCart,
 };
